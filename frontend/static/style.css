@@ -1,0 +1,31 @@
+.login{
+    max-width: 540px;
+    margin: auto;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px #00000026;
+}
+
+.login input{
+    margin-top: 1rem;
+}
+
+
+/*
+.content {
+    max-width: 710px;
+    background-color: #f8f9fa;
+    margin: auto;
+    margin-top: 15px;
+    border: 1px solid #aaaaaa;
+    border-radius: 15px;
+}
+*/
+
+.content{
+    max-width: 710px;
+    /*background-color: #f8f9fa;*/
+    border-radius: 10px;
+    margin-top: 10px;
+    box-shadow: 0 0 10px #00000026;
+}

@@ -1,0 +1,17 @@
+<script>
+  import { classnames } from '../utils';
+
+  /**
+   * Additional CSS classes for container element.
+   * @type {string}
+   * @default ''
+   */
+  let className = '';
+  export { className as class };
+
+  $: classes = classnames(className, 'btn-toolbar');
+</script>
+
+<div {...$$restProps} role="toolbar" class={classes}>
+  <slot />
+</div>

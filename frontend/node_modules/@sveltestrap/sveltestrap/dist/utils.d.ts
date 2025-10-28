@@ -1,0 +1,12 @@
+export function getOriginalBodyPadding(): number;
+export function getScrollbarWidth(): number;
+export function setScrollbarWidth(padding: any): void;
+export function isBodyOverflowing(): boolean;
+export function isObject(value: any): boolean;
+export function conditionallyUpdateScrollbar(): void;
+export function getColumnSizeClass(isXs: any, colWidth: any, colSize: any): string;
+export function browserEvent(target: any, ...args: any[]): () => any;
+export function getNewCarouselActiveIndex(direction: any, items: any, activeIndex: any): any;
+export function getTransitionDuration(element: any): number;
+export function uuid(): string;
+export function classnames(...args: any[]): string;

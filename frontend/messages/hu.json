@@ -1,0 +1,13 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"homepage_welcome": "Kezdőlap",
+	"homepage_enterapp": "Belépés a rendszerbe",
+	"app_navbar_order": "Rendelés",
+	"app_navbar_pricing": "Árak",
+	"app_navbar_profile": "Fiók",
+	"app_navbar_logout": "Kijelentkezés",
+	"app_navbar_login": "Belépés",
+	"app_navbar_settings": "Beállítások",
+	"app_navbar_faq": "GYIK",
+	"app_navbar_tracking": "Nyomonkövetés"
+}

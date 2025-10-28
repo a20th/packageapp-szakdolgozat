@@ -1,0 +1,13 @@
+{
+  "dsn": "host=localhost user=postgres password=admin dbname=packageapp port=5432 sslmode=disable",
+  "smtp": {
+    "host": "mail.smtp2go.com",
+    "port": 2525,
+    "sender": "a20th@mailbox.unideb.hu",
+    "username": "noreplyszakdolgozat",
+    "password": "Szakdolgozatjelszo2025"
+  },
+  "geolocation_api_key": "68c078f484901591212192mvybbc423",
+  "jwt_secret_key": "02dd313e36caf1151b0e3ff9319bd4799e73e1f561c7c364676b033b424d7118",
+  "email_dev": false
+}

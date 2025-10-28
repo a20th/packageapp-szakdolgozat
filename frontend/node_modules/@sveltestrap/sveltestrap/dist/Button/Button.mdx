@@ -1,0 +1,101 @@
+import { Meta, Canvas, Controls, Story, Source } from '@storybook/blocks';
+import * as ButtonStories from './Button.stories';
+
+<Meta title="Components/Button" />
+
+# Button <small class="bootstrap-docs">[Bootstrap Button](https://getbootstrap.com/docs/5.3/components/buttons/)</small>
+
+The `<Button>` component is a user-friendly element in the interface that you can click on. It's designed for various tasks like triggering functions, sending form data, or navigating within an application. It also provides visual and interactive feedback to keep users informed about their actions.
+
+<Canvas>
+  <Story of={ButtonStories.Basic} />
+</Canvas>
+
+<Controls of={ButtonStories.Basic} />
+
+## Colors
+<Canvas withSource="none">
+  <Story of={ButtonStories.Colors} />
+</Canvas>
+
+<Source dark language="html" code={`
+<script lang="ts">
+  import { Button } from '@sveltestrap/sveltestrap';
+</script>
+
+<Button color="primary">Primary</Button>
+`} />
+
+## Outlines
+<Canvas withSource="none">
+  <Story of={ButtonStories.Outlines} />
+</Canvas>
+
+<Source dark language="html" code={`
+<script lang="ts">
+  import { Button } from '@sveltestrap/sveltestrap';
+</script>
+
+<Button outline color="primary">Primary</Button>
+`} />
+
+## Sizes
+
+<Canvas withSource="none">
+  <Story of={ButtonStories.Sizes} />
+</Canvas>
+
+<Source dark language="html" code={`
+<script lang="ts">
+  import { Button } from '@sveltestrap/sveltestrap';
+</script>
+
+<Button size="md">Medium</Button>
+`} />
+
+## Groups
+
+<Canvas withSource="none">
+  <Story of={ButtonStories.Groups} />
+</Canvas>
+
+<Source dark language="html" code={`
+<script lang="ts">
+  import { Button, ButtonGroup } from '@sveltestrap/sveltestrap';
+</script>
+
+<ButtonGroup>
+  <Button color="primary" active>Alpha</Button>
+  <Button color="primary">Bravo</Button>
+  <Button color="primary">Charlie</Button>
+</ButtonGroup>
+`} />
+
+## Toolbar
+
+<Canvas withSource="none">
+  <Story of={ButtonStories.Toolbar} />
+</Canvas>
+
+<Source dark language="html" code={`
+<script lang="ts">
+  import { Button, ButtonGroup, ButtonToolbar } from '@sveltestrap/sveltestrap';
+</script>
+
+<ButtonToolbar>
+  <ButtonGroup class="me-2">
+    <Button color="primary">1</Button>
+    <Button color="primary">2</Button>
+    <Button color="primary">3</Button>
+    <Button color="primary">4</Button>
+  </ButtonGroup>
+  <ButtonGroup class="me-2">
+    <Button color="primary">5</Button>
+    <Button color="primary">6</Button>
+    <Button color="primary">7</Button>
+  </ButtonGroup>
+  <ButtonGroup>
+    <Button color="primary">8</Button>
+  </ButtonGroup>
+</ButtonToolbar>
+`} />

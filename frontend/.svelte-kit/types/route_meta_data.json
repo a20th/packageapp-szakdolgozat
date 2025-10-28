@@ -1,0 +1,23 @@
+{
+	"/": [],
+	"/app": [
+		"src/routes/app/+page.server.ts",
+		"src/routes/app/+layout.server.ts",
+		"src/routes/app/+layout.server.ts"
+	],
+	"/app/faq": [
+		"src/routes/app/+layout.server.ts"
+	],
+	"/app/order": [
+		"src/routes/app/order/+page.server.ts",
+		"src/routes/app/+layout.server.ts"
+	],
+	"/app/pricing": [
+		"src/routes/app/pricing/+page.server.ts",
+		"src/routes/app/+layout.server.ts"
+	],
+	"/app/tracking": [
+		"src/routes/app/tracking/+page.server.ts",
+		"src/routes/app/+layout.server.ts"
+	]
+}
