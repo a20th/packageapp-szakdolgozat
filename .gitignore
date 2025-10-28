@@ -45,3 +45,4 @@ go.work.sum
 /front/symlink-from
 /back/.idea/
 /front/_tmp_flaky_test_output.txt
+back/main/config.json
