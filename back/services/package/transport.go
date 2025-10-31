@@ -2,6 +2,9 @@ package _package
 
 import (
 	"context"
+	"encoding/json"
+	"io"
+	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
 )
@@ -20,6 +23,24 @@ type GetPackageStatusResponse struct {
 	Status      string  `json:"status"`
 	Description *string `json:"description;omitempty"`
 	Date        string  `json:"date"`
+}
+
+func DecodeAddPackageStatusRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var request AddPackageStatusRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return nil, err
+	}
+	return request, nil
+}
+
+func DecodeGetPackageStatusRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var request GetPackageStatusRequest
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		return nil, io.EOF
+	}
+	request.Id = id
+	return request, nil
 }
 
 func MakeAddPackageStatus(s Service) endpoint.Endpoint {

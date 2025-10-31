@@ -6,9 +6,20 @@
     box-shadow: 0 0 20px #00000026;
 }
 
+.all{
+    max-width: 540px;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
 .login input{
     margin-top: 1rem;
 }
+
+form, div, main{
+    transition: all 1s allow-discrete;
+}
+
 
 
 /*
@@ -28,4 +39,14 @@
     border-radius: 10px;
     margin-top: 10px;
     box-shadow: 0 0 10px #00000026;
+}
+
+.showing {
+    opacity: 1;
+}
+
+@starting-style {
+  .showing {
+    opacity: 0;
+  }
 }

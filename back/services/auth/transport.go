@@ -28,7 +28,7 @@ func MakeLoginEndpoint(s Service) endpoint.Endpoint {
 func MakeRefreshEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		claims := ctx.Value(jwt.JWTClaimsContextKey).(*stdjwt.RegisteredClaims)
-		access, refresh, err := s.Refresh(claims.Subject, claims.ID)
+		access, refresh, err := s.Refresh(claims.ID, claims.Subject)
 		if err != nil {
 			return nil, err
 		}
@@ -42,6 +42,7 @@ func MakeRefreshEndpoint(s Service) endpoint.Endpoint {
 
 func MakeLogoutEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
+
 		claims := ctx.Value(jwt.JWTClaimsContextKey).(*stdjwt.RegisteredClaims)
 		err := s.Logout(claims.ID)
 		return nil, err

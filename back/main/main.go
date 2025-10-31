@@ -6,11 +6,13 @@ import (
 	"back-go/services/email"
 	"back-go/services/models"
 	"back-go/services/order"
+	_package "back-go/services/package"
 	"back-go/services/pricing"
 	"back-go/services/repository"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -41,7 +43,6 @@ type Config struct {
 }
 
 func main() {
-
 	var config Config
 	{
 		path, _ := filepath.Abs("./main/config.json")
@@ -68,27 +69,29 @@ func main() {
 	}
 
 	logger := log.NewLogfmtLogger(os.Stdout)
-
 	fieldKeys := []string{"method", "error"}
 	promNamespace := "package_app"
-	requestCount := kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
-		Namespace: promNamespace,
-		Subsystem: "auth_service",
-		Name:      "request_count",
-		Help:      "Number of requests received.",
-	}, fieldKeys)
-	requestLatency := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-		Namespace: promNamespace,
-		Subsystem: "auth_service",
-		Name:      "request_latency_microseconds",
-		Help:      "Total duration of requests in microseconds.",
-	}, fieldKeys)
-	countResult := kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-		Namespace: promNamespace,
-		Subsystem: "auth_service",
-		Name:      "count_result",
-		Help:      "The result of each count method.",
-	}, []string{})
+	requestCount := func(subsystem string) *kitprometheus.Counter {
+		return kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+			Namespace: promNamespace,
+			Subsystem: subsystem,
+			Name:      "request_count",
+			Help:      "Number of requests received.",
+		}, fieldKeys)
+	}
+	requestLatency := func(subsystem string) *kitprometheus.Summary {
+		return kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+			Namespace: promNamespace,
+			Subsystem: subsystem,
+			Name:      "request_latency_microseconds",
+			Help:      "Total duration of requests in microseconds.",
+		}, fieldKeys)
+	}
+
+	jwtRepository := repository.JWTRepository{Db: db}
+	accountRepository := repository.AccountRepository{Db: db}
+	orderRepository := repository.OrderRepository{Db: db}
+	packageRepository := repository.PackageRepository{Db: db}
 
 	var emailService email.Service
 	{
@@ -108,42 +111,54 @@ func main() {
 		pricingService = pricing.CreatePricingService(config.GeolocationAPIKey, rate.NewLimiter(rate.Every(time.Second*2), 1), pricing.Pricing{BasePrice: 1000, KmPrice: 15})
 		pricingService = pricing.LoggingMiddleware{Logger: logger, Next: pricingService}
 		pricingService = pricing.InstrumentingMiddleware{
-			RequestCount:   requestCount,
-			RequestLatency: requestLatency,
-			CountResult:    countResult,
+			RequestCount:   requestCount("auth_service"),
+			RequestLatency: requestLatency("auth_service"),
 			Next:           pricingService,
 		}
 	}
 
 	var accountService account.Service
 	{
-		accountService = account.CreateAccountService(repository.AccountRepository{Db: db}, emailService)
+		accountService = account.CreateAccountService(accountRepository, emailService)
 		accountService = account.LoggingMiddleware{Logger: logger, Next: accountService}
 		accountService = account.InstrumentingMiddleware{
-			RequestCount:   requestCount,
-			RequestLatency: requestLatency,
-			CountResult:    countResult,
+			RequestCount:   requestCount("account_service"),
+			RequestLatency: requestLatency("account_service"),
 			Next:           accountService,
 		}
 	}
 
-	jwtRepository := repository.JWTRepository{Db: db}
-
 	var authService auth.Service
 	{
-		authService = auth.CreateAuthService([]byte(config.JWTSecretKey), repository.AccountRepository{Db: db}, jwtRepository)
+		authService = auth.CreateAuthService([]byte(config.JWTSecretKey), accountRepository, jwtRepository)
 		authService = auth.LoggingMiddleware{Logger: logger, Next: authService}
 		authService = auth.InstrumentingMiddleware{
-			RequestCount:   requestCount,
-			RequestLatency: requestLatency,
-			CountResult:    countResult,
+			RequestCount:   requestCount("auth_service"),
+			RequestLatency: requestLatency("auth_service"),
 			Next:           authService,
 		}
 	}
 
 	var orderService order.Service
 	{
-		orderService = order.CreateOrderService(repository.OrderRepository{Db: db}, pricingService)
+		orderService = order.CreateOrderService(orderRepository, pricingService)
+		orderService = order.LoggingMiddleware{Logger: logger, Next: orderService}
+		orderService = order.InstrumentingMiddleware{
+			RequestCount:   requestCount("order_service"),
+			RequestLatency: requestLatency("order_service"),
+			Next:           orderService,
+		}
+	}
+
+	var packageService _package.Service
+	{
+		packageService = _package.CreatePackageService(packageRepository)
+		packageService = _package.LoggingMiddleware{Logger: logger, Next: packageService}
+		packageService = _package.InstrumentingMiddleware{
+			RequestCount:   requestCount("package_service"),
+			RequestLatency: requestLatency("package_service"),
+			Next:           packageService,
+		}
 	}
 
 	keyFunction := func(token *stdjwt.Token) (interface{}, error) { return []byte(config.JWTSecretKey), nil }
@@ -156,6 +171,21 @@ func main() {
 		order.DecodeCreateOrderRequest,
 		EncodeResponse,
 		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	getAllOrderHandler := httptransport.NewServer(
+		Auth(order.MakeGetAllOrdersRequest(orderService)),
+		httptransport.NopRequestDecoder,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	getPackageStatusHandler := httptransport.NewServer(
+		_package.MakeGetPackageStatus(packageService),
+		_package.DecodeGetPackageStatusRequest,
+		EncodeResponse,
 		httptransport.ServerErrorEncoder(JSONErrorEncoder),
 	)
 
@@ -200,15 +230,15 @@ func main() {
 	)
 
 	logoutHandler := httptransport.NewServer(
-		JWTParser(keyFunction, stdjwt.SigningMethodHS256, jwtRepository)(auth.MakeLogoutEndpoint(authService)),
+		Auth(auth.MakeLogoutEndpoint(authService)),
 		httptransport.NopRequestDecoder,
 		EncodeResponse,
 		httptransport.ServerErrorEncoder(JSONErrorEncoder),
 		httptransport.ServerBefore(jwt.HTTPToContext()),
 	)
 	refreshHandler := httptransport.NewServer(
-		JWTParser(keyFunction, stdjwt.SigningMethodHS256, jwtRepository)(auth.MakeRefreshEndpoint(authService)),
-		auth.DecodeRefreshRequest,
+		Auth(auth.MakeRefreshEndpoint(authService)),
+		httptransport.NopRequestDecoder,
 		EncodeResponse,
 		httptransport.ServerErrorEncoder(JSONErrorEncoder),
 		httptransport.ServerBefore(jwt.HTTPToContext()),
@@ -219,11 +249,13 @@ func main() {
 	mux.Handle("POST /register", registerHandler)
 	mux.Handle("POST /logout", logoutHandler)
 	mux.Handle("POST /refresh", refreshHandler)
-	mux.Handle("GET /price", calculatePriceHandler)
+	mux.Handle("POST /price", calculatePriceHandler)
 	mux.Handle("POST /order/create", createOrderHandler)
 	mux.Handle("GET /metrics", promhttp.Handler())
 	mux.Handle("GET /get", getHandler)
 	mux.Handle("POST /verify", verifyHandler)
+	mux.Handle("GET /status", getPackageStatusHandler)
+	mux.Handle("GET /getall", getAllOrderHandler)
 
 	//handler := cors.AllowAll().Handler(mux)
 	opt := cors.Options{
@@ -264,7 +296,9 @@ func JWTParser(keyFunc stdjwt.Keyfunc, method stdjwt.SigningMethod, jwtRepositor
 
 				return keyFunc(token)
 			})
-
+			if err != nil {
+				return nil, err
+			}
 			if !token.Valid {
 				id := token.Claims.(*stdjwt.RegisteredClaims).ID
 				repoErr := jwtRepository.Delete(id)
@@ -293,6 +327,7 @@ func JWTParser(keyFunc stdjwt.Keyfunc, method stdjwt.SigningMethod, jwtRepositor
 func JSONErrorEncoder(ctx context.Context, err error, w http.ResponseWriter) {
 
 	status := http.StatusInternalServerError
+	fmt.Println(err)
 	if errors.Is(err, io.EOF) {
 		err = errors.New("empty request")
 		status = http.StatusBadRequest

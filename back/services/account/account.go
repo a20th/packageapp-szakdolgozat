@@ -88,15 +88,12 @@ func (s service) Register(email string, password string, name string, phoneNumbe
 	{
 		message = *gomail.NewMessage()
 		message.SetHeader("To", email)
-		var site string
-		if preferredLang == "hu" {
-			site = "<h2>Kedves %name</h2><p>A felhasználó fiókod aktiválásához kattints az alábbi linkre:</p><a href=\"%link\">%link</a>"
-			message.SetHeader("Subject", "Regisztráció megerősítése")
-		} else {
-			site = "<h2>Dear %name</h2><p>To activate your account click on the following link:</p><a href=\"%link\">%link</a>"
-			message.SetHeader("Subject", "Verify registration")
-		}
-		link := "http://localhost:8080/app?verify=" + verificationCode + "&email=" + url.QueryEscape(email)
+
+		site := "<h2>Kedves %name</h2><p>A felhasználó fiókod aktiválásához kattints az alábbi linkre:</p><a href=\"%link\">%link</a>" +
+			"<p>To activate your account click on the link above:</p>"
+		message.SetHeader("Subject", "Regisztráció megerősítése / Verify registration")
+
+		link := "http://localhost:5173/app?verify=" + verificationCode + "&email=" + url.QueryEscape(email)
 
 		site = strings.Replace(site, "%name", acc.Name, -1)
 		site = strings.Replace(site, "%link", link, -1)

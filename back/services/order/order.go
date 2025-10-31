@@ -6,13 +6,14 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/uuid"
+	"github.com/oklog/ulid/v2"
 	"golang.org/x/sync/errgroup"
 )
 
 type Service interface {
 	CreateOrder(order *models.Order) error
 	GetOrder(id string) (*models.Order, error)
+	GetAllOrders(email string) (*[]models.Order, error)
 }
 
 var NoPackageError = errors.New("no package found")
@@ -20,6 +21,14 @@ var NoPackageError = errors.New("no package found")
 type service struct {
 	Repo    Repository
 	Pricing pricing.Service
+}
+
+func (s service) GetAllOrders(email string) (*[]models.Order, error) {
+	account, err := s.Repo.FindFromAccount(email)
+	if err != nil {
+		return nil, err
+	}
+	return account, nil
 }
 
 func (s service) asyncCalc(p *models.Package) error {
@@ -37,10 +46,11 @@ func (s service) CreateOrder(order *models.Order) error {
 	if numberOfPackages == 0 {
 		return NoPackageError
 	}
+	order.OrderID = ulid.Make().String()
 	errs, _ := errgroup.WithContext(context.Background())
 	for i := 0; i < numberOfPackages; i++ {
 		p := &(*order.Packages)[i]
-		p.PackageID = uuid.New().String()
+		p.PackageID = ulid.Make().String()
 		errs.Go(func() error {
 			return s.asyncCalc(p)
 		})
@@ -56,17 +66,8 @@ func (s service) CreateOrder(order *models.Order) error {
 	return nil
 }
 
-func (s service) ConfirmOrder(id string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (s service) GetOrder(id string) (*models.Order, error) {
 	return s.Repo.Find(id)
-}
-
-func (s service) GetOrdersOfAccount(accountID uint) ([]models.Order, error) {
-	panic("implement me")
 }
 
 func CreateOrderService(repo Repository, serv pricing.Service) Service {

@@ -20,6 +20,6 @@ func (p PackageRepository) Store(m *models.Package) error {
 
 func (p PackageRepository) Find(id string) (*models.Package, error) {
 	ctx := context.Background()
-	user, err := gorm.G[models.Package](p.Db).Where("id = ?", id).First(ctx)
+	user, err := gorm.G[models.Package](p.Db).Where("package_id = ?", id).First(ctx)
 	return &user, err
 }

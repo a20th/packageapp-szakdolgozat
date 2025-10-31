@@ -17,7 +17,7 @@
   <NavbarBrand href="/app">MyPackage</NavbarBrand>
   <NavbarToggler on:click={() => (isNavOpen = !isNavOpen)} />
   <Collapse isOpen={isNavOpen} navbar expand="md" on:update={handleNavUpdate}>
-    <Nav class="ms-auto" navbar>
+    <Nav class="ms-auto" navbar data-sveltekit-reload>
         <NavItem>
             <NavLink class="pe-1 {getLocale() == "hu" ? "active" : ""}" on:click={() => setLocale("hu")}>HU</NavLink>
         </NavItem>
@@ -42,6 +42,7 @@
         <DropdownToggle nav caret>{data.profile?.name}</DropdownToggle>
         <DropdownMenu end>
           <DropdownItem>{m.app_navbar_profile()}</DropdownItem>
+          <DropdownItem href="/app/orders">Megrendelések</DropdownItem>
           <DropdownItem divider />
           <form method="POST" action="/app?/logout">
           <DropdownItem type="submit">{m.app_navbar_logout()}</DropdownItem>

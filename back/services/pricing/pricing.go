@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/jftuga/geodist"
 	"golang.org/x/time/rate"
@@ -29,22 +28,18 @@ type Pricing struct {
 }
 
 type service struct {
-	apiKey        string
-	rate          *rate.Limiter
-	locationCache *LocationCache
-	pricing       Pricing
+	apiKey  string
+	rate    *rate.Limiter
+	pricing Pricing
 }
 
-type LocationCache struct {
-	sync.RWMutex
-	m map[string]geodist.Coord
-}
+func (s *service) CalculatePrice(from string, to string, size int) (float64, error) {
 
-func (s service) CalculatePrice(from string, to string, size int) (float64, error) {
 	fromChan := make(chan geodist.Coord)
 	toChan := make(chan geodist.Coord)
 	fromError := make(chan error)
 	toError := make(chan error)
+
 	go s.asyncGetLocation(from, fromChan, fromError)
 	go s.asyncGetLocation(to, toChan, toError)
 
@@ -81,15 +76,14 @@ func (s service) CalculatePrice(from string, to string, size int) (float64, erro
 	return price, nil
 }
 
-func (s service) asyncGetLocation(location string, coord chan geodist.Coord, errc chan error) {
-	s.locationCache.RLock()
-	val, ok := s.locationCache.m[location]
-	s.locationCache.RUnlock()
+func (s *service) asyncGetLocation(location string, coord chan geodist.Coord, errc chan error) {
+
+	/*val, ok := s.locationCache.Get(location)
 	if ok {
-		coord <- val
+		coord <- val.(geodist.Coord)
 		errc <- nil
 		return
-	}
+	}*/
 	client := http.Client{}
 	apiUrl := "https://geocode.maps.co/search?q=?query?&api_key=?apikey?"
 	location = url.QueryEscape(location)
@@ -144,9 +138,8 @@ func (s service) asyncGetLocation(location string, coord chan geodist.Coord, err
 		Lon: lon,
 	}
 
-	s.locationCache.Lock()
-	s.locationCache.m[location] = coords
-	s.locationCache.Unlock()
+	coord <- coords
+	errc <- nil
 	return
 }
 

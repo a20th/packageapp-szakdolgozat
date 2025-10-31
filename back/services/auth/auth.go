@@ -26,8 +26,9 @@ type service struct {
 }
 
 func createNewClaims(email string) (accessClaims stdjwt.RegisteredClaims, refreshClaims stdjwt.RegisteredClaims) {
+	//accessExpiration := stdjwt.NewNumericDate(time.Now().Add(time.Hour))
 	accessExpiration := stdjwt.NewNumericDate(time.Now().Add(time.Hour))
-	refreshExpiration := stdjwt.NewNumericDate(time.Now().Add(time.Hour * 168))
+	refreshExpiration := stdjwt.NewNumericDate(time.Now().Add(time.Hour * 24))
 	accessClaims = stdjwt.RegisteredClaims{
 		Subject:   email,
 		Audience:  stdjwt.ClaimStrings{"access", "user"},

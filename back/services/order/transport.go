@@ -76,6 +76,22 @@ func DecodeCreateOrderRequest(_ context.Context, r *http.Request) (interface{}, 
 	return request, nil
 }
 
+func MakeGetAllOrdersRequest(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		claims := ctx.Value(jwt.JWTClaimsContextKey).(*stdjwt.RegisteredClaims)
+		orders, err := s.GetAllOrders(claims.Subject)
+		if err != nil {
+			return nil, err
+		}
+		var response GetAllOrdersResponse
+		response.Orders = make([]OrderDTO, len(*orders))
+		for i, order := range *orders {
+			response.Orders[i] = ToOrderDTO(order)
+		}
+		return response, nil
+	}
+}
+
 type CreateOrderRequest struct {
 	AccountID uint
 	Name      string
@@ -86,6 +102,98 @@ type CreateOrderRequest struct {
 	Address   string
 	Number    string
 	Packages  []CreatePackageDTO
+}
+
+type GetAllOrdersResponse struct {
+	Orders []OrderDTO `json:"orders"`
+}
+
+type OrderDTO struct {
+	Id        string
+	Name      string
+	TaxNumber *string
+	ZIPCode   string
+	City      string
+	Country   string
+	Address   string
+	Number    string
+	Packages  []PackageDTO
+}
+
+type PackageDTO struct {
+	Id          string
+	Length      int `gorm:"not null"`
+	Width       int `gorm:"not null"`
+	Height      int `gorm:"not null"`
+	FromName    string
+	FromPhone   string
+	FromEmail   string
+	FromCountry string
+	FromZIP     string
+	FromCity    string
+	FromAddress string
+	FromNumber  string
+	FromOther   string
+	ToName      string
+	ToPhone     string
+	ToEmail     string
+	ToCountry   string
+	ToZIP       string
+	ToCity      string
+	ToAddress   string
+	ToNumber    string
+	ToOther     string
+}
+
+func ToOrderDTO(order models.Order) (dto OrderDTO) {
+	dto.Id = order.OrderID
+	dto.Name = order.Name
+	dto.TaxNumber = order.TaxNumber
+	dto.ZIPCode = order.ZIPCode
+	dto.City = order.City
+	dto.Country = order.Country
+	dto.Address = order.Address
+	dto.Number = order.Number
+
+	dto.Packages = make([]PackageDTO, len(*order.Packages))
+	for i, p := range *order.Packages {
+		dto.Packages[i] = ToPackageDTO(p)
+	}
+	return
+}
+
+func ToPackageDTO(p models.Package) (dto PackageDTO) {
+	dto.Id = p.PackageID
+	dto.Length = p.Length
+	dto.Width = p.Width
+	dto.Height = p.Height
+	dto.FromName = p.From.Name
+	dto.FromPhone = p.From.Phone
+	if p.From.Email != nil {
+		dto.FromEmail = *p.From.Email
+	}
+	dto.FromCountry = p.From.Country
+	dto.FromZIP = p.From.ZIP
+	dto.FromCity = p.From.City
+	dto.FromAddress = p.From.Address
+	dto.FromNumber = p.From.Number
+	if p.From.Other != nil {
+		dto.FromOther = *p.From.Other
+	}
+	dto.ToName = p.To.Name
+	dto.ToPhone = p.To.Phone
+	if p.To.Email != nil {
+		dto.ToEmail = *p.To.Email
+	}
+	dto.ToCountry = p.To.Country
+	dto.ToZIP = p.To.ZIP
+	dto.ToCity = p.To.City
+	dto.ToAddress = p.To.Address
+	dto.ToNumber = p.To.Number
+	if p.To.Other != nil {
+		dto.ToOther = *p.To.Other
+	}
+	return
 }
 
 type CreatePackageDTO struct {

@@ -12,12 +12,11 @@
 </script>
 
 <main class="container content p-4">
-    <h2 class="text-center">{m.app_navbar_tracking()}</h2>
-
-    {#if data.status}
-        <h3 class="text-center">Package {data.packageId}</h3>
+    <h2 class="text-center">Rendelések</h2>
+    {#each data.orders as order}
+        <h3 class="text-center">Rendelés {order.Id}</h3>
         <ul>
-            {#each data.status as status}
+            {#each order.Packages as pack}
                 <li
                     class="list-group-item d-flex justify-content-between align-items-start"
                 >
@@ -33,12 +32,5 @@
                 </li>
             {/each}
         </ul>
-    {:else}
-        <FormGroup floating label="Package ID">
-            <Input bind:value={id} required />
-        </FormGroup>
-        <a href="/app/tracking?id={id}" class="btn btn-secondary d-block w-100"
-            >Track</a
-        >
-    {/if}
+        {/each}
 </main>

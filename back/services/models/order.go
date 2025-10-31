@@ -4,6 +4,7 @@ import "gorm.io/gorm"
 
 type Order struct {
 	gorm.Model
+	OrderID      string  `gorm:"not null;unique"`
 	AccountEmail string  `gorm:"not null"`
 	Account      Account `gorm:"not null;foreignKey:AccountEmail;references:Email"`
 	Name         string  `gorm:"not null"`

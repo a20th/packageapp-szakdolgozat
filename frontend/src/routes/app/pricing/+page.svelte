@@ -265,7 +265,7 @@
                     </FormGroup>
                 </div>
             </div>
-            <Button type="submit" class="w-100">Calculate price</Button>
+            <Button type="submit" disabled={submitInProgress} class="w-100">Calculate price</Button>
         </form>
         {#if form?.success}
             <p>Price of delivery: {form.success} HUF</p>
