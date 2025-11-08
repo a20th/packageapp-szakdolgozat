@@ -13,6 +13,8 @@ import (
 type Service interface {
 	CreateOrder(order *models.Order) error
 	GetOrder(id string) (*models.Order, error)
+	DeleteOrder(id string) error
+	UpdateOrder(order OrderDTO) error
 	GetAllOrders(email string) (*[]models.Order, error)
 }
 
@@ -21,6 +23,33 @@ var NoPackageError = errors.New("no package found")
 type service struct {
 	Repo    Repository
 	Pricing pricing.Service
+}
+
+func (s service) DeleteOrder(id string) error {
+	err := s.Repo.Delete(id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s service) UpdateOrder(order OrderDTO) (err error) {
+	o, err := s.Repo.Find(order.Id)
+	if err != nil {
+		return err
+	}
+	o.City = order.City
+	o.Name = order.Name
+	o.Country = order.Country
+	o.Address = order.Address
+	o.TaxNumber = order.TaxNumber
+	o.ZIPCode = order.ZIPCode
+	o.Number = order.Number
+	err = s.Repo.Store(o)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s service) GetAllOrders(email string) (*[]models.Order, error) {
@@ -42,15 +71,15 @@ func (s service) asyncCalc(p *models.Package) error {
 }
 
 func (s service) CreateOrder(order *models.Order) error {
-	numberOfPackages := len(*order.Packages)
+	numberOfPackages := len(order.Packages)
 	if numberOfPackages == 0 {
 		return NoPackageError
 	}
-	order.OrderID = ulid.Make().String()
+	order.OrderID = "O" + ulid.Make().String()
 	errs, _ := errgroup.WithContext(context.Background())
 	for i := 0; i < numberOfPackages; i++ {
-		p := &(*order.Packages)[i]
-		p.PackageID = ulid.Make().String()
+		p := &(order.Packages[i])
+		p.PackageID = "P" + ulid.Make().String()
 		errs.Go(func() error {
 			return s.asyncCalc(p)
 		})
@@ -78,4 +107,5 @@ type Repository interface {
 	Store(order *models.Order) error
 	Find(id string) (*models.Order, error)
 	FindFromAccount(string) (*[]models.Order, error)
+	Delete(string) error
 }

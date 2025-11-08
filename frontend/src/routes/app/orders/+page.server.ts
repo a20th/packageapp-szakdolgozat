@@ -41,14 +41,14 @@ export const load = async (event) => {
     const url = apiLocation + "/getall"
     return await event.fetch(url, {
         method: "GET",
-        headers: { "Content-Type": "application/json",
+        headers: {
+            "Content-Type": "application/json",
             "Authorization": "Bearer " + event.cookies.get("access")
         }
     }).then(async (res) => {
         if (res.ok) {
-            console
-
-            return { orders: await res.json() as OrderDTO}
+            const resp = await res.json() as OrderDTO[]
+            return { orders: resp }
         }
     }).catch((e) => {
         console.log(e)

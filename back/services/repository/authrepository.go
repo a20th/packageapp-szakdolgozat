@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type JWTRepository struct {
@@ -14,7 +15,7 @@ type JWTRepository struct {
 func (r JWTRepository) Store(tokens *models.TokenRecord) error {
 	ctx := context.Background()
 	result := gorm.WithResult()
-	err := gorm.G[models.TokenRecord](r.Db, result).Create(ctx, tokens)
+	err := gorm.G[models.TokenRecord](r.Db, result, clause.OnConflict{UpdateAll: true}).Create(ctx, tokens)
 	return err
 }
 

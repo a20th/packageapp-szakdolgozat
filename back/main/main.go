@@ -2,6 +2,7 @@ package main
 
 import (
 	"back-go/services/account"
+	"back-go/services/admin"
 	"back-go/services/auth"
 	"back-go/services/email"
 	"back-go/services/models"
@@ -12,19 +13,21 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 
+	"github.com/alexedwards/argon2id"
 	"github.com/go-kit/kit/auth/jwt"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/rs/cors"
 	"golang.org/x/time/rate"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/go-kit/kit/log"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -63,11 +66,16 @@ func main() {
 		panic("failed to connect database" + err.Error())
 	}
 
-	err = db.AutoMigrate(models.Order{}, models.Package{}, models.Status{}, models.Account{}, models.TokenRecord{})
+	err = db.AutoMigrate(models.Order{}, models.Package{}, models.Status{}, models.Account{}, models.TokenRecord{}, models.Admin{})
 	if err != nil {
 		return
 	}
 
+	hash, _ := argon2id.CreateHash("admin", argon2id.DefaultParams)
+	db.Clauses(clause.OnConflict{DoNothing: true}).Create(&models.Admin{
+		Username: "admin",
+		Password: hash,
+	})
 	logger := log.NewLogfmtLogger(os.Stdout)
 	fieldKeys := []string{"method", "error"}
 	promNamespace := "package_app"
@@ -88,10 +96,11 @@ func main() {
 		}, fieldKeys)
 	}
 
-	jwtRepository := repository.JWTRepository{Db: db}
+	authRepository := repository.JWTRepository{Db: db}
 	accountRepository := repository.AccountRepository{Db: db}
 	orderRepository := repository.OrderRepository{Db: db}
 	packageRepository := repository.PackageRepository{Db: db}
+	adminRepository := repository.AdminRepository{Db: db}
 
 	var emailService email.Service
 	{
@@ -100,7 +109,7 @@ func main() {
 		} else {
 			err = email.TestEmailConfig(config.Smtp)
 			if err != nil {
-				logger.Log("error", err)
+				_ = logger.Log("error", err)
 			}
 			emailService = email.CreateEmailService(config.Smtp)
 		}
@@ -111,8 +120,8 @@ func main() {
 		pricingService = pricing.CreatePricingService(config.GeolocationAPIKey, rate.NewLimiter(rate.Every(time.Second*2), 1), pricing.Pricing{BasePrice: 1000, KmPrice: 15})
 		pricingService = pricing.LoggingMiddleware{Logger: logger, Next: pricingService}
 		pricingService = pricing.InstrumentingMiddleware{
-			RequestCount:   requestCount("auth_service"),
-			RequestLatency: requestLatency("auth_service"),
+			RequestCount:   requestCount("pricing_service"),
+			RequestLatency: requestLatency("pricing_service"),
 			Next:           pricingService,
 		}
 	}
@@ -130,7 +139,7 @@ func main() {
 
 	var authService auth.Service
 	{
-		authService = auth.CreateAuthService([]byte(config.JWTSecretKey), accountRepository, jwtRepository)
+		authService = auth.CreateAuthService([]byte(config.JWTSecretKey), accountRepository, authRepository)
 		authService = auth.LoggingMiddleware{Logger: logger, Next: authService}
 		authService = auth.InstrumentingMiddleware{
 			RequestCount:   requestCount("auth_service"),
@@ -161,10 +170,131 @@ func main() {
 		}
 	}
 
+	var adminService admin.Service
+	{
+		adminService = admin.CreateAdminService([]byte(config.JWTSecretKey), adminRepository, authRepository)
+	}
+
 	keyFunction := func(token *stdjwt.Token) (interface{}, error) { return []byte(config.JWTSecretKey), nil }
 	Auth := func(e endpoint.Endpoint) endpoint.Endpoint {
-		return JWTParser(keyFunction, stdjwt.SigningMethodHS256, jwtRepository)(e)
+		return JWTParser(keyFunction, stdjwt.SigningMethodHS256, authRepository, false)(e)
 	}
+	AdminAuth := func(e endpoint.Endpoint) endpoint.Endpoint {
+		return JWTParser(keyFunction, stdjwt.SigningMethodHS256, authRepository, true)(e)
+	}
+	/** Admin **/
+	adminGetHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeAdminGetEndpoint(adminService)),
+		httptransport.NopRequestDecoder,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	adminGetAllHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeGetAdminsEndpoint(adminService)),
+		httptransport.NopRequestDecoder,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	adminDeleteHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeDeleteAdminEndpoint(adminService)),
+		admin.DecodeIDHeader,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	adminCreateHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeCreateAdminEndpoint(adminService)),
+		admin.DecodeRequest,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	adminLoginHandler := httptransport.NewServer(
+		admin.MakeLoginEndpoint(adminService),
+		admin.DecodeRequest,
+		EncodeResponse,
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	adminLogoutHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeLogoutEndpoint(adminService)),
+		httptransport.NopRequestDecoder,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	adminRefreshHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeRefreshEndpoint(adminService)),
+		httptransport.NopRequestDecoder,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	adminGetPackageHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeAdminGetPackageEndpoint(packageService)),
+		admin.DecodeIDHeader,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	adminDeletePackageHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeAdminDeletePackageEndpoint(packageService)),
+		admin.DecodeIDHeader,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	adminUpdatePackageHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeAdminUpdatePackageEndpoint(packageService)),
+		admin.DecodeUpdatePackageRequest,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	adminGetOrderHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeAdminGetOrderEndpoint(orderService)),
+		admin.DecodeIDHeader,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	adminDeleteOrderHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeAdminDeleteOrderEndpoint(orderService)),
+		admin.DecodeIDHeader,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	adminUpdateOrderHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeAdminUpdateOrderEndpoint(orderService)),
+		admin.DecodeUpdateOrderRequest,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	adminAddStatusHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeAdminAddStatusEndpoint(packageService)),
+		_package.DecodeAddPackageStatusRequest,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	/** Admin **/
 
 	createOrderHandler := httptransport.NewServer(
 		Auth(order.MakeCreateOrderRequest(orderService)),
@@ -188,23 +318,18 @@ func main() {
 		EncodeResponse,
 		httptransport.ServerErrorEncoder(JSONErrorEncoder),
 	)
-
-	//Pricing Service Endpoint
 	calculatePriceHandler := httptransport.NewServer(
 		pricing.MakeCalculatePriceRequest(pricingService),
 		pricing.DecodeCalculatePriceRequest,
 		EncodeResponse,
 		httptransport.ServerErrorEncoder(JSONErrorEncoder),
 	)
-
-	//Account Service Endpoints
 	registerHandler := httptransport.NewServer(
 		account.MakeRegisterEndpoint(accountService),
 		account.DecodeRegisterRequest,
 		EncodeResponse,
 		httptransport.ServerErrorEncoder(JSONErrorEncoder),
 	)
-
 	getHandler := httptransport.NewServer(
 		Auth(account.MakeGetEndpoint(accountService)),
 		httptransport.NopRequestDecoder,
@@ -212,23 +337,18 @@ func main() {
 		httptransport.ServerBefore(jwt.HTTPToContext()),
 		httptransport.ServerErrorEncoder(JSONErrorEncoder),
 	)
-
-	//Auth Service Endpoints
-
 	loginHandler := httptransport.NewServer(
 		auth.MakeLoginEndpoint(authService),
 		auth.DecodeLoginRequest,
 		EncodeResponse,
 		httptransport.ServerErrorEncoder(JSONErrorEncoder),
 	)
-
 	verifyHandler := httptransport.NewServer(
 		account.MakeVerifyEndpoint(accountService),
 		account.DecodeVerifyRequest,
 		EncodeResponse,
 		httptransport.ServerErrorEncoder(JSONErrorEncoder),
 	)
-
 	logoutHandler := httptransport.NewServer(
 		Auth(auth.MakeLogoutEndpoint(authService)),
 		httptransport.NopRequestDecoder,
@@ -254,10 +374,28 @@ func main() {
 	mux.Handle("GET /metrics", promhttp.Handler())
 	mux.Handle("GET /get", getHandler)
 	mux.Handle("POST /verify", verifyHandler)
-	mux.Handle("GET /status", getPackageStatusHandler)
+	mux.Handle("GET /track", getPackageStatusHandler)
 	mux.Handle("GET /getall", getAllOrderHandler)
 
-	//handler := cors.AllowAll().Handler(mux)
+	mux.Handle("GET /admin/get", adminGetHandler)
+	mux.Handle("POST /admin/login", adminLoginHandler)
+	mux.Handle("POST /admin/logout", adminLogoutHandler)
+	mux.Handle("GET /admin/refresh", adminRefreshHandler)
+	mux.Handle("GET /admin/getall", adminGetAllHandler)
+	mux.Handle("DELETE /admin/user", adminDeleteHandler)
+	mux.Handle("PUT /admin/user", adminCreateHandler)
+
+	mux.Handle("GET /admin/order", adminGetOrderHandler)
+	mux.Handle("DELETE /admin/order", adminDeleteOrderHandler)
+	mux.Handle("POST /admin/order", adminUpdateOrderHandler)
+	mux.Handle("GET /admin/package", adminGetPackageHandler)
+	mux.Handle("DELETE /admin/package", adminDeletePackageHandler)
+	mux.Handle("POST /admin/package", adminUpdatePackageHandler)
+	mux.Handle("POST /admin/status", adminAddStatusHandler)
+
+	//GET /admin/orders
+	//GET /admin/packages
+
 	opt := cors.Options{
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{
@@ -272,12 +410,11 @@ func main() {
 		AllowCredentials: true,
 	}
 	handler := cors.New(opt).Handler(mux)
-	logger.Log("msg", "HTTP", "addr", ":8080")
-	logger.Log("err", http.ListenAndServe(":8080", handler))
+	_ = logger.Log("msg", "HTTP", "addr", ":8080")
+	_ = logger.Log("err", http.ListenAndServe(":8080", handler))
 }
 
-// gokit jwt implementáció kibővítve az adatbázisból törölt tokenek szűrésével
-func JWTParser(keyFunc stdjwt.Keyfunc, method stdjwt.SigningMethod, jwtRepository repository.JWTRepository) endpoint.Middleware {
+func JWTParser(keyFunc stdjwt.Keyfunc, method stdjwt.SigningMethod, jwtRepository repository.JWTRepository, admin bool) endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 			tokenString, ok := ctx.Value(jwt.JWTContextKey).(string)
@@ -316,7 +453,9 @@ func JWTParser(keyFunc stdjwt.Keyfunc, method stdjwt.SigningMethod, jwtRepositor
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, jwt.ErrTokenExpired
 			}
-
+			if (admin && !slices.Contains(token.Claims.(*stdjwt.RegisteredClaims).Audience, "admin")) || !admin && !slices.Contains(token.Claims.(*stdjwt.RegisteredClaims).Audience, "user") {
+				return nil, stdjwt.ErrTokenInvalidAudience
+			}
 			ctx = context.WithValue(ctx, jwt.JWTClaimsContextKey, token.Claims)
 
 			return next(ctx, request)
@@ -324,10 +463,9 @@ func JWTParser(keyFunc stdjwt.Keyfunc, method stdjwt.SigningMethod, jwtRepositor
 	}
 }
 
-func JSONErrorEncoder(ctx context.Context, err error, w http.ResponseWriter) {
+func JSONErrorEncoder(_ context.Context, err error, w http.ResponseWriter) {
 
 	status := http.StatusInternalServerError
-	fmt.Println(err)
 	if errors.Is(err, io.EOF) {
 		err = errors.New("empty request")
 		status = http.StatusBadRequest
@@ -343,7 +481,10 @@ func JSONErrorEncoder(ctx context.Context, err error, w http.ResponseWriter) {
 		status = http.StatusBadRequest
 	}
 	if errors.Is(err, auth.ErrInvalidCredentials) ||
-		errors.Is(err, stdjwt.ErrTokenExpired) {
+		errors.Is(err, stdjwt.ErrTokenExpired) ||
+		errors.Is(err, jwt.ErrTokenExpired) ||
+		errors.Is(err, jwt.ErrTokenInvalid) ||
+		errors.Is(err, stdjwt.ErrTokenInvalidAudience) {
 		status = http.StatusUnauthorized
 
 	}
@@ -351,7 +492,7 @@ func JSONErrorEncoder(ctx context.Context, err error, w http.ResponseWriter) {
 	contentType, body := "application/json; charset=utf-8", "{\"error\": \""+err.Error()+"\" }"
 	w.Header().Set("Content-Type", contentType)
 	w.WriteHeader(status)
-	w.Write([]byte(body))
+	_, _ = w.Write([]byte(body))
 }
 
 func EncodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {

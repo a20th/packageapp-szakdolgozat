@@ -165,6 +165,7 @@
                         type="password"
                         placeholder="Enter a value"
                         name="password"
+                        id="password"
                         required
                     />
                     <div slot="label">
@@ -172,6 +173,7 @@
                         <span class="text-danger">*</span>
                     </div>
                 </FormGroup>
+                <span class="text-wrap m-0">Jelszónak tartalmaznia kell legalább egy betűt, egy számot és 8-32 karakter között kell lennie</span>         
                 <FormGroup floating>
                     <Input
                         disabled={submitInProgress}

@@ -15,7 +15,7 @@ type Package struct {
 	Price     int      `gorm:"not null"`
 	From      Location `gorm:"embedded;embeddedPrefix:from_"`
 	To        Location `gorm:"embedded;embeddedPrefix:to_"`
-	OrderID   uint     `gorm:"not null"`
+	OrderID   string   `gorm:"not null"`
 	Statuses  []Status `gorm:"foreignKey:PackageID;references:PackageID"`
 }
 

@@ -39,19 +39,19 @@
 
 {#if form?.error}
     <Alert class="container content" dismissible id="error" color="danger">
-        <h4 class="alert-heading text-capitalize">Error</h4>
+        <h4 class="alert-heading text-capitalize">{m.error()}</h4>
         {form.error}
     </Alert>
 {:else if form?.success}
     <Alert class="container content" dismissible color="success">
-        <h4 class="alert-heading text-capitalize">Success</h4>
-        Sikeresen leadtad a rendelést! Munkatársunk hamarosan felveszi veled a kapcsolatot.
+        <h4 class="alert-heading text-capitalize">{m.success()}</h4>
+        {m.successful_order_message()}
     </Alert>
 {/if}
 
 <main class="container content">
     <div class="p-3">
-        <h2 class="text-center">1. lépés: Adatok megadása</h2>
+        <h2 class="text-center">{m.order_step1()}</h2>
         <form
             action="{form?.prices ? "/app/order?/confirm" : "/app/order?/calculate"}"
             method="post"
@@ -71,10 +71,10 @@
         >
             <div class={form?.prices ? "d-none" : ""}>
                 <span
-                    ><span class="text-danger">*</span> - Required fields to fill</span
+                    ><span class="text-danger">*</span> - {m.required_fields()}</span
                 >
                 <hr />
-                <h3 class="mb-3">Feladó adatai:</h3>
+                <h3 class="mb-3">{m.sender()}:</h3>
                 <div class="row">
                     <div class="col col-sm-6">
                         <FormGroup floating>
@@ -95,7 +95,7 @@
                                 {/each}
                             </Input>
                             <div slot="label">
-                                Country <span class="text-danger">*</span>
+                                {m.country()} <span class="text-danger">*</span>
                             </div>
                         </FormGroup>
                     </div>
@@ -109,7 +109,7 @@
                                 required
                             />
                             <div slot="label">
-                                Postcode <span class="text-danger">*</span>
+                                {m.postcode()} <span class="text-danger">*</span>
                             </div>
                         </FormGroup>
                     </div>
@@ -121,7 +121,7 @@
                                 required
                             />
                             <div slot="label">
-                                City <span class="text-danger">*</span>
+                                {m.city()} <span class="text-danger">*</span>
                             </div>
                         </FormGroup>
                     </div>
@@ -134,8 +134,8 @@
                                 name="from-address"
                                 required
                             />
-                            <div slot="label">
-                                Name and type of public space <span
+                            <div slot="label">{m.address()}
+                                 <span
                                     class="text-danger">*</span
                                 >
                             </div>
@@ -149,7 +149,7 @@
                                 required
                             />
                             <div slot="label">
-                                Number <span class="text-danger">*</span>
+                                {m.number()} <span class="text-danger">*</span>
                             </div>
                         </FormGroup>
                     </div>
@@ -161,7 +161,7 @@
                                 disabled={submitInProgress}
                                 name="from-other"
                             />
-                            <div slot="label">Other</div>
+                            <div slot="label">{m.other()}</div>
                         </FormGroup>
                     </div>
                 </div>
@@ -175,7 +175,7 @@
                                 required
                             />
                             <div slot="label">
-                                Full Name <span class="text-danger">*</span>
+                                {m.full_name()} <span class="text-danger">*</span>
                             </div>
                         </FormGroup>
                     </div>
@@ -189,7 +189,7 @@
                                 required
                             />
                             <div slot="label">
-                                Phone number <span class="text-danger">*</span>
+                                {m.phone_number()} <span class="text-danger">*</span>
                             </div>
                         </FormGroup>
                     </div>
@@ -205,14 +205,14 @@
                     </div>
                 </div>
                 <hr />
-                <h3 class="mb-3">Számlázási adatok:</h3>
+                <h3 class="mb-3">{m.invoice_address()}:</h3>
                 <Input
                     type="checkbox"
                     name="invoice"
                     class="mb-4"
                     style="min-width: 0px"
                     bind:checked={checkedState}
-                    label="Számlázási cím megegyezik"
+                    label={m.invoice_address_same()}
                 />
                 {#if !checkedState}
                     <div class="row">
@@ -235,7 +235,7 @@
                                     {/each}
                                 </Input>
                                 <div slot="label">
-                                    Country <span class="text-danger">*</span>
+                                    {m.country()} <span class="text-danger">*</span>
                                 </div>
                             </FormGroup>
                         </div>
@@ -249,7 +249,7 @@
                                     required
                                 />
                                 <div slot="label">
-                                    Postcode <span class="text-danger">*</span>
+                                    {m.postcode()} <span class="text-danger">*</span>
                                 </div>
                             </FormGroup>
                         </div>
@@ -261,7 +261,7 @@
                                     required
                                 />
                                 <div slot="label">
-                                    City <span class="text-danger">*</span>
+                                    {m.city()}  <span class="text-danger">*</span>
                                 </div>
                             </FormGroup>
                         </div>
@@ -275,7 +275,7 @@
                                     required
                                 />
                                 <div slot="label">
-                                    Name and type of public space <span
+                                    {m.address()}  <span
                                         class="text-danger">*</span
                                     >
                                 </div>
@@ -289,7 +289,7 @@
                                     required
                                 />
                                 <div slot="label">
-                                    Number <span class="text-danger">*</span>
+                                    {m.number()}  <span class="text-danger">*</span>
                                 </div>
                             </FormGroup>
                         </div>
@@ -304,7 +304,7 @@
                                     required
                                 />
                                 <div slot="label">
-                                    Full Name / Company <span
+                                    {m.full_name_company()} <span
                                         class="text-danger">*</span
                                     >
                                 </div>
@@ -317,7 +317,7 @@
                                     name="invoice-tax-number"
                                     required
                                 />
-                                <div slot="label">Tax number</div>
+                                <div slot="label">{m.tax_number()}</div>
                             </FormGroup>
                         </div>
                     </div>
@@ -325,7 +325,7 @@
                 <hr />
                 {#each packages as item, i}
                     <div class="row justify-content-between">
-                        <div class="col"><h3>Csomag {i + 1}</h3></div>
+                        <div class="col"><h3>{m.package()} {i + 1}</h3></div>
 
                         <div class="col">
                             <Button
@@ -336,7 +336,7 @@
                                         (_, index) => index != i,
                                     ))}
                                 style="float: right;"
-                                >Törlés <i class="bi bi-trash"></i></Button
+                                >{m.delete()} <i class="bi bi-trash"></i></Button
                             >
                             <Button
                                 color="primary"
@@ -346,11 +346,11 @@
                                     let clone = { ...packages[i] };
                                     packages.push(clone);
                                 }}
-                                style="float: right;">Duplázás</Button
+                                style="float: right;">{m.duplicate()}</Button
                             >
                         </div>
                     </div>
-                    <p>Csomag méretei:</p>
+                    <p>{m.size_of_package()}:</p>
                     <div class="row row-cols-2 row-cols-md-3">
                         <div class="col">
                             <div class="input-group mb-3">
@@ -365,7 +365,7 @@
                                         required
                                     />
                                     <label for="floatingInputGroup1">
-                                        Length <span class="text-danger">*</span
+                                        {m.length()} <span class="text-danger">*</span
                                         ></label
                                     >
                                 </div>
@@ -385,7 +385,7 @@
                                         required
                                     />
                                     <label for="floatingInputGroup1">
-                                        Width <span class="text-danger">*</span
+                                        {m.width()} <span class="text-danger">*</span
                                         ></label
                                     >
                                 </div>
@@ -405,7 +405,7 @@
                                         required
                                     />
                                     <label for="floatingInputGroup1">
-                                        Height <span class="text-danger">*</span
+                                        {m.height()} <span class="text-danger">*</span
                                         ></label
                                     >
                                 </div>
@@ -414,7 +414,7 @@
                         </div>
                     </div>
 
-                    <p>Címzett adatai:</p>
+                    <p>{m.recipient()}:</p>
                     <div class="row">
                         <div class="col col-sm-6">
                             <FormGroup floating>
@@ -435,7 +435,7 @@
                                     {/each}
                                 </Input>
                                 <div slot="label">
-                                    Country <span class="text-danger">*</span>
+                                    {m.country()} <span class="text-danger">*</span>
                                 </div>
                             </FormGroup>
                         </div>
@@ -449,7 +449,7 @@
                                     required
                                 />
                                 <div slot="label">
-                                    Postcode <span class="text-danger">*</span>
+                                    {m.postcode()} <span class="text-danger">*</span>
                                 </div>
                             </FormGroup>
                         </div>
@@ -461,7 +461,7 @@
                                     required
                                 />
                                 <div slot="label">
-                                    City <span class="text-danger">*</span>
+                                    {m.city()} <span class="text-danger">*</span>
                                 </div>
                             </FormGroup>
                         </div>
@@ -475,7 +475,7 @@
                                     required
                                 />
                                 <div slot="label">
-                                    Name and type of public space <span
+                                    {m.address()} <span
                                         class="text-danger">*</span
                                     >
                                 </div>
@@ -489,7 +489,7 @@
                                     required
                                 />
                                 <div slot="label">
-                                    Number <span class="text-danger">*</span>
+                                    {m.number()} <span class="text-danger">*</span>
                                 </div>
                             </FormGroup>
                         </div>
@@ -501,7 +501,7 @@
                                     disabled={submitInProgress}
                                     name="other-{i}"
                                 />
-                                <div slot="label">Other</div>
+                                <div slot="label">{m.other()}</div>
                             </FormGroup>
                         </div>
                     </div>
@@ -514,7 +514,7 @@
                                     required
                                 />
                                 <div slot="label">
-                                    Full Name <span class="text-danger">*</span>
+                                    {m.full_name()} <span class="text-danger">*</span>
                                 </div>
                             </FormGroup>
                         </div>
@@ -528,7 +528,7 @@
                                     required
                                 />
                                 <div slot="label">
-                                    Phone number <span class="text-danger"
+                                    {m.phone_number()} <span class="text-danger"
                                         >*</span
                                     >
                                 </div>
@@ -551,7 +551,7 @@
                     type="button"
                     disabled={submitInProgress}
                     on:click={() => packages.push({} as Package)}
-                    class="w-100 p-4 my-1">Csomag hozzáadása</Button
+                    class="w-100 p-4 my-1">{m.add_package()}</Button
                 >
                 <input
                     type="hidden"
@@ -562,16 +562,16 @@
                     type="submit"
                     class="w-100 mb-1"
                     disabled={submitInProgress || packages.length == 0}
-                    >Árkalkuláció</Button
+                    >{m.quote()}</Button
                 >
             </div>
-            <div class={form?.prices ? "" : "d-none"}>
+            <div class={form?.prices ? "opacity-100" : "d-none opacity-0"}>
                 <hr />
                 <h2 class="text-center mb-3">
-                    2. lépés: Rendelés véglegesítése
+                    {m.order_step2()}
                 </h2>
                 <div class="row justify-content-between">
-                    <div class="col"><h3>Árajánlat</h3></div>
+                    <div class="col"><h3>{m.quote()}</h3></div>
 
                     <div class="col">
                         <Button
@@ -579,17 +579,17 @@
                             type="button"
                             on:click={() => {if(form?.prices) {form = null}}}
                             style="float: right;"
-                            >Vissza <i class="bi bi-arrow-left"></i></Button
+                            >{m.back()} <i class="bi bi-arrow-left"></i></Button
                         >
                     </div>
                 </div>
                 {#if form?.prices}
                     <Table>
                         {#each form.prices as price, i}
-                            <tr><td>Csomag {i}</td><td>{price} HUF</td></tr>
+                            <tr><td>{m.package()} {i + 1}</td><td>{price} HUF</td></tr>
                         {/each}
                         <tr
-                            ><td class="fw-bold">Összesen</td><td
+                            ><td class="fw-bold">{m.total()}</td><td
                                 >{form.prices.reduce((acc, x) => acc + x)} HUF</td
                             ></tr
                         >
@@ -600,7 +600,7 @@
                     type="submit"
                     class="w-100 mt-2"
                     disabled={submitInProgress}
-                    >Megerősítés</Button
+                    >{m.confirm_order()}</Button
                 >
             </div>
         </form>

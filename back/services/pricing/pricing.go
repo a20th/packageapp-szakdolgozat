@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"math"
 	"net/http"
 	"net/url"
@@ -77,13 +78,6 @@ func (s *service) CalculatePrice(from string, to string, size int) (float64, err
 }
 
 func (s *service) asyncGetLocation(location string, coord chan geodist.Coord, errc chan error) {
-
-	/*val, ok := s.locationCache.Get(location)
-	if ok {
-		coord <- val.(geodist.Coord)
-		errc <- nil
-		return
-	}*/
 	client := http.Client{}
 	apiUrl := "https://geocode.maps.co/search?q=?query?&api_key=?apikey?"
 	location = url.QueryEscape(location)
@@ -101,7 +95,9 @@ func (s *service) asyncGetLocation(location string, coord chan geodist.Coord, er
 		errc <- err
 		return
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		coord <- geodist.Coord{}

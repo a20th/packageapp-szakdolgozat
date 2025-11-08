@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/go-kit/kit/endpoint"
 )
 
 type AddPackageStatusRequest struct {
-	Id          string  `json:"id"`
-	Status      string  `json:"status"`
-	Description *string `json:"description;omitempty"`
+	Id          string `json:"id"`
+	Status      string `json:"status"`
+	Description string `json:"description"`
 }
 
 type GetPackageStatusRequest struct {
@@ -21,7 +22,7 @@ type GetPackageStatusRequest struct {
 
 type GetPackageStatusResponse struct {
 	Status      string  `json:"status"`
-	Description *string `json:"description;omitempty"`
+	Description *string `json:"description,omitempty"`
 	Date        string  `json:"date"`
 }
 
@@ -43,17 +44,6 @@ func DecodeGetPackageStatusRequest(_ context.Context, r *http.Request) (interfac
 	return request, nil
 }
 
-func MakeAddPackageStatus(s Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(AddPackageStatusRequest)
-		err := s.AddPackageStatus(req.Id, req.Status, *req.Description)
-		if err != nil {
-			return nil, err
-		}
-		return nil, nil
-	}
-}
-
 func MakeGetPackageStatus(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(GetPackageStatusRequest)
@@ -63,7 +53,7 @@ func MakeGetPackageStatus(s Service) endpoint.Endpoint {
 			return nil, err
 		}
 		for i, m := range status {
-			response[i] = GetPackageStatusResponse{Status: m.Status, Description: m.Description, Date: m.CreatedAt.String()}
+			response[i] = GetPackageStatusResponse{Status: m.Status, Description: m.Description, Date: m.CreatedAt.Format(time.RFC3339)}
 		}
 		return response, nil
 	}

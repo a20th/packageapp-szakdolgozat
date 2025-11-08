@@ -24,7 +24,6 @@ var ErrInvalidVerificationCode = errors.New("invalid verification code")
 var ErrAccountNotExist = errors.New("account does not exist")
 var ErrInvalidEmail = errors.New("invalid email")
 var ErrDuplicateEmail = errors.New("duplicate email")
-var ErrInvalidLanguage = errors.New("invalid language")
 
 type Service interface {
 	Register(email string, password string, name string, phoneNumber string, preferredLang string) error

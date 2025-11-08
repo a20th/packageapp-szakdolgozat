@@ -9,11 +9,10 @@ type Order struct {
 	Account      Account `gorm:"not null;foreignKey:AccountEmail;references:Email"`
 	Name         string  `gorm:"not null"`
 	TaxNumber    *string
-	ZIPCode      string `gorm:"not null"`
-	City         string `gorm:"not null"`
-	Email        string `gorm:"not null"`
-	Country      string `gorm:"not null"`
-	Address      string `gorm:"not null"`
-	Number       string `gorm:"not null"`
-	Packages     *[]Package
+	ZIPCode      string    `gorm:"not null"`
+	City         string    `gorm:"not null"`
+	Country      string    `gorm:"not null"`
+	Address      string    `gorm:"not null"`
+	Number       string    `gorm:"not null"`
+	Packages     []Package `gorm:"foreignKey:OrderID;references:OrderID"`
 }

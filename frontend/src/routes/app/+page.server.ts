@@ -8,6 +8,10 @@ import { apiLocation } from '$lib/server/config';
 
 export const load = async (event) => {
 
+    if(event.locals.loggedIn){
+        return redirect(303, "/app/order")
+    }
+
     const verify = event.url.searchParams.get("verify")
     const email = event.url.searchParams.get("email")
     if (verify && email) {
@@ -75,8 +79,8 @@ export const actions = {
             const accessToken = data.access_token
             const refreshToken = data.refresh_token
 
-            event.cookies.set("access", accessToken, { path: "/" })
-            event.cookies.set("refresh", refreshToken, { path: "/" })
+            event.cookies.set("access", accessToken, { path: "/app" })
+            event.cookies.set("refresh", refreshToken, { path: "/app" })
         }
         catch (e) {
             return fail(500, { error: "Internal error: " + e })

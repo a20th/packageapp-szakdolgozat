@@ -10,27 +10,13 @@
     let { data } = $props();
     let id = $state();
 
-    const translateStatus: Function = (value: string) => {
-        switch (value) {
-            case "confirmation":
-                return "Awaiting confirmation";
-
-            case "confirmed":
-                return "Confirmed"
-
-            case "shipping":
-                return "Shipping"
-
-            case "shipping-fail":
-                return "Recipient failed to claim package"
-
-            case "shipped":
-                return "Package arrived at destination"
-
-            default:
-                return value;
-        }
-    };
+    const translateStatus: Function = (value: string) => {switch (value) {
+        case "confirmation":
+            return "Awaiting confirmation"
+    
+        default:
+            return value
+    }}
 
 </script>
 

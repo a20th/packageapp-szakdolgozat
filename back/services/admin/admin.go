@@ -1,9 +1,10 @@
-package auth
+package admin
 
 import (
-	"back-go/services/account"
+	"back-go/services/auth"
 	"back-go/services/models"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/alexedwards/argon2id"
@@ -11,26 +12,12 @@ import (
 	"github.com/google/uuid"
 )
 
-var ErrInvalidCredentials = errors.New("invalid credentials")
-
-type Service interface {
-	Login(email string, password string) (string, string, error)
-	Logout(id string) error
-	Refresh(email string, id string) (string, string, error)
-}
-
-type service struct {
-	JWTKey      []byte
-	AccountRepo account.Repository
-	AuthRepo    Repository
-}
-
 func createNewClaims(email string) (accessClaims stdjwt.RegisteredClaims, refreshClaims stdjwt.RegisteredClaims) {
 	accessExpiration := stdjwt.NewNumericDate(time.Now().Add(time.Hour))
 	refreshExpiration := stdjwt.NewNumericDate(time.Now().Add(time.Hour * 24))
 	accessClaims = stdjwt.RegisteredClaims{
 		Subject:   email,
-		Audience:  stdjwt.ClaimStrings{"access", "user"},
+		Audience:  stdjwt.ClaimStrings{"access", "admin"},
 		ExpiresAt: accessExpiration,
 		IssuedAt:  stdjwt.NewNumericDate(time.Now()),
 		ID:        uuid.New().String(),
@@ -39,7 +26,7 @@ func createNewClaims(email string) (accessClaims stdjwt.RegisteredClaims, refres
 	refreshClaims = stdjwt.RegisteredClaims{
 		Subject:   email,
 		ExpiresAt: refreshExpiration,
-		Audience:  stdjwt.ClaimStrings{"refresh", "user"},
+		Audience:  stdjwt.ClaimStrings{"refresh", "admin"},
 		IssuedAt:  stdjwt.NewNumericDate(time.Now()),
 		ID:        uuid.New().String(),
 	}
@@ -47,18 +34,67 @@ func createNewClaims(email string) (accessClaims stdjwt.RegisteredClaims, refres
 	return
 }
 
-func (s service) Login(email string, password string) (accessToken string, refreshToken string, err error) {
-	acc, err := s.AccountRepo.FindByEmail(email)
+type Service interface {
+	Login(string, string) (string, string, error)
+	Logout(string) error
+	Refresh(string, string) (string, string, error)
+	Create(string, string) error
+	Delete(string) error
+	GetUsers() ([]string, error)
+}
+
+func CreateAdminService(jwtKey []byte, adminRepo Repository, authRepo auth.Repository) Service {
+	return &service{JWTKey: jwtKey, Repo: adminRepo, AuthRepo: authRepo}
+}
+
+type service struct {
+	JWTKey   []byte
+	Repo     Repository
+	AuthRepo auth.Repository
+}
+
+func (s service) GetUsers() (st []string, err error) {
+	users, err := s.Repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	st = make([]string, len(users))
+	for i, user := range users {
+		st[i] = user.Username
+	}
+	return
+}
+
+func (s service) Delete(username string) error {
+	fmt.Println(username)
+	err := s.Repo.Delete(username)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s service) Create(username string, password string) error {
+
+	pwd, err := argon2id.CreateHash(password, argon2id.DefaultParams)
+	if err != nil {
+		return err
+	}
+	admin := models.Admin{Username: username, Password: pwd}
+	err = s.Repo.Store(&admin)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s service) Login(id string, password string) (accessToken string, refreshToken string, err error) {
+	acc, err := s.Repo.Find(id)
 	if errors.Is(err, errors.New("no records found")) {
-		err = ErrInvalidCredentials
+		err = auth.ErrInvalidCredentials
 		return
 	}
 	if err != nil {
-		return
-	}
-
-	if acc.VerifiedAt == nil {
-		err = account.ErrNotVerified
 		return
 	}
 
@@ -68,11 +104,11 @@ func (s service) Login(email string, password string) (accessToken string, refre
 	}
 
 	if !match {
-		err = ErrInvalidCredentials
+		err = auth.ErrInvalidCredentials
 		return
 	}
 
-	accessClaims, refreshClaims := createNewClaims(email)
+	accessClaims, refreshClaims := createNewClaims(id)
 
 	tokenRecord := models.TokenRecord{
 		AccessID:  accessClaims.ID,
@@ -137,16 +173,9 @@ func (s service) Refresh(id string, email string) (accessToken string, refreshTo
 	return
 }
 
-func CreateAuthService(JWTKey []byte, AccountRepo account.Repository, AuthRepo Repository) (s Service) {
-	return &service{
-		JWTKey:      JWTKey,
-		AccountRepo: AccountRepo,
-		AuthRepo:    AuthRepo,
-	}
-}
-
 type Repository interface {
-	Store(tokens *models.TokenRecord) error
-	Find(id string) (*models.TokenRecord, error)
-	Delete(id string) error
+	Store(*models.Admin) error
+	Find(string) (*models.Admin, error)
+	GetAll() ([]models.Admin, error)
+	Delete(string) error
 }

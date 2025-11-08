@@ -12,6 +12,30 @@ type LoggingMiddleware struct {
 	Next   Service
 }
 
+func (mw LoggingMiddleware) DeleteOrder(id string) (err error) {
+	defer func(begin time.Time) {
+		_ = mw.Logger.Log(
+			"method", "DeleteOrder",
+			"err", err,
+			"took", time.Since(begin),
+		)
+	}(time.Now())
+
+	return mw.Next.DeleteOrder(id)
+}
+
+func (mw LoggingMiddleware) UpdateOrder(order OrderDTO) (err error) {
+	defer func(begin time.Time) {
+		_ = mw.Logger.Log(
+			"method", "UpdateOrder",
+			"err", err,
+			"took", time.Since(begin),
+		)
+	}(time.Now())
+
+	return mw.Next.UpdateOrder(order)
+}
+
 func (mw LoggingMiddleware) GetAllOrders(email string) (orders *[]models.Order, err error) {
 	defer func(begin time.Time) {
 		_ = mw.Logger.Log(

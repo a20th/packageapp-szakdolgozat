@@ -9,5 +9,9 @@
 	"app_navbar_login": "Belépés",
 	"app_navbar_settings": "Beállítások",
 	"app_navbar_faq": "GYIK",
-	"app_navbar_tracking": "Nyomonkövetés"
+	"app_navbar_tracking": "Nyomonkövetés",
+	"successful_order_message": "Sikeresen leadtad a rendelést! Munkatársunk hamarosan felveszi veled a kapcsolatot.",
+	"order_step1": "1. lépés: Adatok megadása",
+	"quote" : "Árkalkuláció",
+	"invoice_address_same" : "Számlázási cím megegyezik"
 }

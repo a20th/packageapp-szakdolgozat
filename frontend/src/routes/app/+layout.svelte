@@ -41,8 +41,7 @@
       <Dropdown nav inNavbar>
         <DropdownToggle nav caret>{data.profile?.name}</DropdownToggle>
         <DropdownMenu end>
-          <DropdownItem>{m.app_navbar_profile()}</DropdownItem>
-          <DropdownItem href="/app/orders">Megrendelések</DropdownItem>
+          <DropdownItem href="/app/orders">{m.orders()}</DropdownItem>
           <DropdownItem divider />
           <form method="POST" action="/app?/logout">
           <DropdownItem type="submit">{m.app_navbar_logout()}</DropdownItem>

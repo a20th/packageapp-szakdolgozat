@@ -4,3 +4,4 @@
 
 <h1>{m.homepage_welcome()}</h1>
 <p><a href="/app">{m.homepage_enterapp()}</a></p>
+<p><a href="/admin">Admin</a></p>

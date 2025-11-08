@@ -58,7 +58,7 @@ func MakeCreateOrderRequest(s Service) endpoint.Endpoint {
 			}
 			packages[i] = pack
 		}
-		order.Packages = &packages
+		order.Packages = packages
 
 		err := s.CreateOrder(&order)
 		if err != nil {
@@ -83,10 +83,10 @@ func MakeGetAllOrdersRequest(s Service) endpoint.Endpoint {
 		if err != nil {
 			return nil, err
 		}
-		var response GetAllOrdersResponse
-		response.Orders = make([]OrderDTO, len(*orders))
+		var response []OrderDTO
+		response = make([]OrderDTO, len(*orders))
 		for i, order := range *orders {
-			response.Orders[i] = ToOrderDTO(order)
+			response[i] = ToOrderDTO(order)
 		}
 		return response, nil
 	}
@@ -154,9 +154,8 @@ func ToOrderDTO(order models.Order) (dto OrderDTO) {
 	dto.Country = order.Country
 	dto.Address = order.Address
 	dto.Number = order.Number
-
-	dto.Packages = make([]PackageDTO, len(*order.Packages))
-	for i, p := range *order.Packages {
+	dto.Packages = make([]PackageDTO, len(order.Packages))
+	for i, p := range order.Packages {
 		dto.Packages[i] = ToPackageDTO(p)
 	}
 	return

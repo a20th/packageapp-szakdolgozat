@@ -2,6 +2,7 @@ package _package
 
 import (
 	"back-go/services/models"
+	"back-go/services/order"
 	"fmt"
 	"time"
 
@@ -12,6 +13,38 @@ type InstrumentingMiddleware struct {
 	RequestCount   metrics.Counter
 	RequestLatency metrics.Histogram
 	Next           Service
+}
+
+func (mw InstrumentingMiddleware) GetPackage(id string) (p *models.Package, err error) {
+	defer func(begin time.Time) {
+		lvs := []string{"method", "GetPackage", "error", fmt.Sprint(err != nil)}
+		mw.RequestCount.With(lvs...).Add(1)
+		mw.RequestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	p, err = mw.GetPackage(id)
+	return
+}
+
+func (mw InstrumentingMiddleware) UpdatePackage(p order.PackageDTO) (err error) {
+	defer func(begin time.Time) {
+		lvs := []string{"method", "UpdatePackage", "error", fmt.Sprint(err != nil)}
+		mw.RequestCount.With(lvs...).Add(1)
+		mw.RequestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	err = mw.Next.UpdatePackage(p)
+	return
+}
+
+func (mw InstrumentingMiddleware) DeletePackage(id string) (err error) {
+	defer func(begin time.Time) {
+		lvs := []string{"method", "DeletePackage", "error", fmt.Sprint(err != nil)}
+		mw.RequestCount.With(lvs...).Add(1)
+		mw.RequestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	err = mw.Next.DeletePackage(id)
+	return
 }
 
 func (mw InstrumentingMiddleware) GetPackageStatus(id string) (status []models.Status, err error) {
