@@ -24,7 +24,7 @@
 {/if}
 
 <main class="container content p-4">
-    <h2 class="text-center mb-4">Admin users</h2>
+    <h2 class="text-center mb-4">{m.users()}</h2>
 
     <!-- svelte-ignore component_name_lowercase -->
     <form
@@ -41,13 +41,13 @@
         }}
     >
         <hr />
-        <h3 class="text-center mb-4">Create new user</h3>
+        <h3 class="text-center mb-4">{m.create_new_user()}</h3>
         <div class="row">
             <div class="col">
                 <FormGroup floating>
                     <Input disabled={submitInProgress} name="username" required
                     ></Input>
-                    <div slot="label">Username</div>
+                    <div slot="label">{m.username()}</div>
                 </FormGroup>
             </div>
             <div class="col">
@@ -58,17 +58,17 @@
                         type="password"
                         required
                     />
-                    <div slot="label">Password</div>
+                    <div slot="label">{m.form_login_password()}</div>
                 </FormGroup>
             </div>
             
         </div>
         <Button type="submit" class="w-100" disabled={submitInProgress}
-                >Create</Button
+                >{m.create()}</Button
             >
     </form>
     <hr />
-    <h3 class="text-center mb-4">Manage users</h3>
+    <h3 class="text-center mb-4">{m.manage_users()}</h3>
     
         {#each data.admins as user}
                 <form
@@ -95,7 +95,7 @@
                                 type="submit"
                                 class=""
                                 color="danger"
-                                disabled={submitInProgress || user == "admin"}>Delete</Button
+                                disabled={submitInProgress || user == "admin"}>{m.delete()}</Button
                             >
                         </div>
                     </div>

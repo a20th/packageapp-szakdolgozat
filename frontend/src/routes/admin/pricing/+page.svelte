@@ -23,7 +23,7 @@
 {/if}
 
 <main class="container content p-4">
-    <h2 class="text-center mb-4">Set pricing</h2>
+    <h2 class="text-center mb-4">{m.setpricing()}</h2>
 
     <!-- svelte-ignore component_name_lowercase -->
     <form
@@ -49,7 +49,7 @@
                         name="baseprice"
                         required
                     ></Input>
-                    <div slot="label">Base Price</div>
+                    <div slot="label">{m.baseprice()}</div>
                 </FormGroup>
             </div>
             <div class="col">
@@ -61,12 +61,12 @@
                         bind:value={data.pricing.kmprice}
                         required
                     />
-                    <div slot="label">Km Price</div>
+                    <div slot="label">{m.kmprice()}</div>
                 </FormGroup>
             </div>
         </div>
         <Button type="submit" class="w-100" disabled={submitInProgress}
-            >Set</Button
+            >{m.update()}</Button
         >
     </form>
 </main>

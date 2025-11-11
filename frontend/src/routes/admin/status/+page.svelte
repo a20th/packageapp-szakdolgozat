@@ -137,7 +137,7 @@
             </div>
         </form>
     {:else}
-        <FormGroup floating label="Package ID">
+        <FormGroup floating label={m.packageid()}>
             <Input bind:value={id} required />
         </FormGroup>
         <a

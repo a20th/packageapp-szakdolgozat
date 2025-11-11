@@ -24,12 +24,12 @@
     <main class="container-md login">
         {#if form?.error}
             <Alert dismissible color="danger">
-                <h4 class="alert-heading text-capitalize">Error</h4>
+                <h4 class="alert-heading text-capitalize">{m.success()}</h4>
                 {form.error}
             </Alert>
         {:else if form?.success}
             <Alert dismissible color="success">
-                <h4 class="alert-heading text-capitalize">Success</h4>
+                <h4 class="alert-heading text-capitalize">{m.error()}</h4>
                 {form.success}
             </Alert>
         {/if}
@@ -48,7 +48,7 @@
             }}
             data-sveltekit-reload
         >
-            <FormGroup floating label="Username">
+            <FormGroup floating label={m.username()}>
                 <Input
                     autocomplete="username"
                     disabled={submitInProgress}
@@ -56,7 +56,7 @@
                     required
                 />
             </FormGroup>
-            <FormGroup floating label="Password">
+            <FormGroup floating label={m.form_login_password()}>
                 <Input
                     autocomplete="current-password"
                     disabled={submitInProgress}

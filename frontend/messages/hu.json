@@ -60,5 +60,13 @@
 	"edit": "Szerkesztés",
 	"status": "Állapot",
 	"packageid": "Csomag azonosító",
-	"description": "Leírás"
+	"description": "Leírás",
+	"price_of_delivery": "Szállítási díj",
+	"create_new_user": "Új felhasználó létrehozása",
+	"manage_users": "Felhasználók kezelése",
+	"username": "Felhasználónév",
+	"create": "Létrehozás",
+	"setpricing": "Árazás beállítása",
+	"baseprice": "Alapár",
+	"kmprice": "Kilométerenkénti ár"
 }

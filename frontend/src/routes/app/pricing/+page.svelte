@@ -43,8 +43,8 @@
                 };
             }}
         >
-            <h2 class="text-center mb-3">Árkalkulátor</h2>
-            <p>Csomag méretei:</p>
+            <h2 class="text-center mb-3">{m.quote()}</h2>
+            <p>{m.size_of_package()}:</p>
             <div class="row row-cols-2 row-cols-md-3">
                 <div class="col">
                     <div class="input-group mb-3">
@@ -58,7 +58,7 @@
                                 required
                             />
                             <label for="floatingInputGroup1">
-                                Length <span class="text-danger">*</span></label
+                                {m.length()} <span class="text-danger">*</span></label
                             >
                         </div>
                         <span class="input-group-text">cm</span>
@@ -76,7 +76,7 @@
                                 required
                             />
                             <label for="floatingInputGroup1">
-                                Width <span class="text-danger">*</span></label
+                                {m.width()} <span class="text-danger">*</span></label
                             >
                         </div>
                         <span class="input-group-text">cm</span>
@@ -94,14 +94,14 @@
                                 required
                             />
                             <label for="floatingInputGroup1">
-                                Height <span class="text-danger">*</span></label
+                                {m.width()} <span class="text-danger">*</span></label
                             >
                         </div>
                         <span class="input-group-text">cm</span>
                     </div>
                 </div>
             </div>
-            <p>Feladó:</p>
+            <p>{m.sender()}:</p>
             <div class="row">
                 <div class="col col-sm-6">
                     <FormGroup floating>
@@ -122,7 +122,7 @@
                             {/each}
                         </Input>
                         <div slot="label">
-                            Country <span class="text-danger">*</span>
+                            {m.country()} <span class="text-danger">*</span>
                         </div>
                     </FormGroup>
                 </div>
@@ -136,7 +136,7 @@
                             required
                         />
                         <div slot="label">
-                            Postcode <span class="text-danger">*</span>
+                            {m.postcode()} <span class="text-danger">*</span>
                         </div>
                     </FormGroup>
                 </div>
@@ -148,7 +148,7 @@
                             required
                         />
                         <div slot="label">
-                            City <span class="text-danger">*</span>
+                            {m.city()} <span class="text-danger">*</span>
                         </div>
                     </FormGroup>
                 </div>
@@ -158,12 +158,11 @@
                     <FormGroup floating>
                         <Input
                             disabled={submitInProgress}
-                            autocomplete="email"
                             name="from-address"
                             required
                         />
                         <div slot="label">
-                            Name and type of public space <span
+                            {m.address()} <span
                                 class="text-danger">*</span
                             >
                         </div>
@@ -173,17 +172,16 @@
                     <FormGroup floating>
                         <Input
                             disabled={submitInProgress}
-                            autocomplete="email"
                             name="from-address-number"
                             required
                         />
                         <div slot="label">
-                            Number <span class="text-danger">*</span>
+                            {m.number()} <span class="text-danger">*</span>
                         </div>
                     </FormGroup>
                 </div>
             </div>
-            <p>Címzett:</p>
+            <p>{m.recipient()}:</p>
             <div class="row">
                 <div class="col col-sm-6">
                     <FormGroup floating>
@@ -204,7 +202,7 @@
                             {/each}
                         </Input>
                         <div slot="label">
-                            Country <span class="text-danger">*</span>
+                            {m.country()} <span class="text-danger">*</span>
                         </div>
                     </FormGroup>
                 </div>
@@ -218,7 +216,7 @@
                             required
                         />
                         <div slot="label">
-                            Postcode <span class="text-danger">*</span>
+                            {m.postcode()} <span class="text-danger">*</span>
                         </div>
                     </FormGroup>
                 </div>
@@ -230,7 +228,7 @@
                             required
                         />
                         <div slot="label">
-                            City <span class="text-danger">*</span>
+                            {m.city()} <span class="text-danger">*</span>
                         </div>
                     </FormGroup>
                 </div>
@@ -240,12 +238,11 @@
                     <FormGroup floating>
                         <Input
                             disabled={submitInProgress}
-                            autocomplete="email"
                             name="to-address"
                             required
                         />
                         <div slot="label">
-                            Name and type of public space <span
+                            {m.address()} <span
                                 class="text-danger">*</span
                             >
                         </div>
@@ -255,20 +252,19 @@
                     <FormGroup floating>
                         <Input
                             disabled={submitInProgress}
-                            autocomplete="email"
                             name="to-address-number"
                             required
                         />
                         <div slot="label">
-                            Number <span class="text-danger">*</span>
+                            {m.number()} <span class="text-danger">*</span>
                         </div>
                     </FormGroup>
                 </div>
             </div>
-            <Button type="submit" disabled={submitInProgress} class="w-100">Calculate price</Button>
+            <Button type="submit" disabled={submitInProgress} class="w-100">{m.calculate_prices()}</Button>
         </form>
         {#if form?.success}
-            <p>Price of delivery: {form.success} HUF</p>
+            <p>{m.price_of_delivery()}: {form.success} HUF</p>
         {/if}
     </div>
 </main>

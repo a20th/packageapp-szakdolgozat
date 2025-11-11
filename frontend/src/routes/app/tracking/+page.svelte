@@ -62,7 +62,7 @@
             {/each}
         </ul>
     {:else}
-        <FormGroup floating label="Package ID">
+        <FormGroup floating label={m.packageid()}>
             <Input bind:value={id} required />
         </FormGroup>
         <a href="/app/tracking?id={id}" class="btn btn-secondary d-block w-100 {id ? "" : "pe-none"}"

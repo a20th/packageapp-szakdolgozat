@@ -48,7 +48,7 @@
         <DropdownToggle nav caret>{m.order()}</DropdownToggle>
         <DropdownMenu end>
           <DropdownItem href="/admin/orders">{m.orders()}</DropdownItem>
-          <DropdownItem href="/admin/order">{m.search_orders()}}</DropdownItem>
+          <DropdownItem href="/admin/order">{m.search_orders()}</DropdownItem>
         </DropdownMenu>
       </Dropdown>
       <NavItem>
@@ -58,7 +58,7 @@
         <NavLink href="/admin/pricing">{m.app_navbar_pricing()}</NavLink>
       </NavItem>
       <NavItem>
-        <NavLink href="/admin/users">{m.users()}}</NavLink>
+        <NavLink href="/admin/users">{m.users()}</NavLink>
       </NavItem>
       {#if data.loggedIn}
         <NavItem>

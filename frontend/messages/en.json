@@ -70,5 +70,14 @@
 	"client": "Client",
 	"edit": "Edit",
 	"status": "Status",
-	"packageid": "Package ID"
+	"packageid": "Package ID",
+	"description": "Description",
+	"price_of_delivery": "Price of delivery",
+	"create_new_user": "Create new user",
+	"manage_users": "Manage users",
+	"username": "Username",
+	"create": "Create",
+	"setpricing": "Set pricing",
+	"baseprice": "Base price",
+	"kmprice": "Km price"
 }
