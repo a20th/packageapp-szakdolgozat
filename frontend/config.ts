@@ -1,0 +1,1 @@
+export const config = { ApiPort: 8081, ApiHost: "localhost" }

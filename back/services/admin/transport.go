@@ -1,8 +1,10 @@
 package admin
 
 import (
+	"back-go/services/models"
 	"back-go/services/order"
 	_package "back-go/services/package"
+	"back-go/services/pricing"
 	"context"
 	"encoding/json"
 	"errors"
@@ -13,6 +15,55 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	stdjwt "github.com/golang-jwt/jwt/v4"
 )
+
+func MakeGetAllOrdersAdminEndpoint(s order.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		orders, err := s.GetAllOrders()
+		if err != nil {
+			return nil, err
+		}
+
+		orderDTOs := make([]AdminOrderDTO, len(*orders))
+		for i, m := range *orders {
+			or := AdminOrderDTO{
+				OrderDTO:     order.ToOrderDTO(m),
+				AccountEmail: m.AccountEmail,
+				AccountName:  m.Account.Name,
+				AccountPhone: m.Account.PhoneNumber,
+			}
+			orderDTOs[i] = or
+		}
+
+		return orderDTOs, nil
+	}
+}
+
+func MakeGetPricingAdminEndpoint(s pricing.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		price, err := s.GetPricing()
+		if err != nil {
+			return nil, err
+		}
+
+		resp := pricing.Pricing{
+			KmPrice:   price.KmPrice,
+			BasePrice: price.BasePrice,
+		}
+		return resp, nil
+	}
+}
+
+func MakeSetPricingAdminEndpoint(s pricing.Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(pricing.Pricing)
+		price := models.Pricing{
+			KmPrice:   req.KmPrice,
+			BasePrice: req.BasePrice,
+		}
+		err := s.SetPricing(price)
+		return nil, err
+	}
+}
 
 func MakeCreateAdminEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
@@ -213,4 +264,11 @@ type RefreshRequest struct {
 type Request struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+type AdminOrderDTO struct {
+	order.OrderDTO
+	AccountEmail string
+	AccountName  string
+	AccountPhone string
 }

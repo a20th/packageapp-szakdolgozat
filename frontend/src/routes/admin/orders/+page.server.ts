@@ -11,6 +11,9 @@ declare interface OrderDTO {
     Number: string;
     Packages: PackageDTO[];
     Active: boolean
+    AccountEmail: string
+	AccountName:  string
+	AccountPhone: string
 }
 
 declare interface PackageDTO {
@@ -39,7 +42,7 @@ declare interface PackageDTO {
 }
 
 export const load = async (event) => {
-    const url = apiLocation + "/getall"
+    const url = apiLocation + "/admin/orders"
     return await event.fetch(url, {
         method: "GET",
         headers: {
@@ -49,6 +52,7 @@ export const load = async (event) => {
     }).then(async (res) => {
         if (res.ok) {
             const resp = await res.json() as OrderDTO[]
+            console.log(resp[0].AccountEmail + "asd")
             return { orders: resp }
         }
     }).catch((e) => {

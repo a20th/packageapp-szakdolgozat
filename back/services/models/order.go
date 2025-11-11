@@ -14,5 +14,6 @@ type Order struct {
 	Country      string    `gorm:"not null"`
 	Address      string    `gorm:"not null"`
 	Number       string    `gorm:"not null"`
+	Active       bool      `gorm:"not null"`
 	Packages     []Package `gorm:"foreignKey:OrderID;references:OrderID"`
 }

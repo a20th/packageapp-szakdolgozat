@@ -1,1 +1,3 @@
-export const apiLocation: string = "http://localhost:8080" 
+import {config} from "../../../config"
+
+export const apiLocation: string = "http://"+ config.ApiHost + ":" + config.ApiPort

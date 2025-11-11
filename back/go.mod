@@ -11,12 +11,12 @@ require (
 	github.com/jftuga/geodist v1.0.0
 	github.com/nyaruka/phonenumbers v1.6.5
 	github.com/oklog/ulid/v2 v2.1.1
-	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.23.0
 	github.com/rs/cors v1.11.1
 	golang.org/x/sync v0.16.0
 	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
+	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.2
 )
@@ -32,6 +32,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.65.0 // indirect

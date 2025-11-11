@@ -230,12 +230,10 @@ export const actions: Actions = {
             catch (e) {
                 return fail(500, { error: "Internal error: " + e })
             }
-            console.log("asd")
             return {prices: prices}
         }
     },
     confirm: async (event) => {
-        console.log("wow")
         const formData = await event.request.formData();
 
         const order = createOrderFromFormData(formData)

@@ -13,19 +13,19 @@
     const translateStatus: Function = (value: string) => {
         switch (value) {
             case "confirmation":
-                return "Awaiting confirmation";
+                return m.status_confirmation();
 
             case "confirmed":
-                return "Confirmed"
+                return m.status_confirmed()
 
             case "shipping":
-                return "Shipping"
+                return m.status_shipping()
 
             case "shipping-fail":
-                return "Recipient failed to claim package"
+                return m.status_shipping_fail()
 
             case "shipped":
-                return "Package arrived at destination"
+                return m.status_shipped()
 
             default:
                 return value;

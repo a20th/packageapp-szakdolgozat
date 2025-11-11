@@ -4,7 +4,6 @@ import (
 	"back-go/services/auth"
 	"back-go/services/models"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/alexedwards/argon2id"
@@ -66,7 +65,6 @@ func (s service) GetUsers() (st []string, err error) {
 }
 
 func (s service) Delete(username string) error {
-	fmt.Println(username)
 	err := s.Repo.Delete(username)
 	if err != nil {
 		return err

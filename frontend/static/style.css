@@ -1,4 +1,4 @@
-.login{
+.login {
     max-width: 540px;
     margin: auto;
     padding: 15px;
@@ -6,21 +6,37 @@
     box-shadow: 0 0 20px #00000026;
 }
 
-.all{
+.all {
     max-width: 540px;
     margin-top: 2rem;
     margin-bottom: 2rem;
 }
 
-.login input{
+.login input {
     margin-top: 1rem;
 }
 
-form, div, main{
+form,
+div,
+main {
     transition: all 1s allow-discrete;
 }
 
+.red-dot {
+    height: 1rem;
+    width: 1rem;
+    background-color: red;
+    border-radius: 50%;
+    display: inline-block;
+}
 
+.green-dot {
+    height: 1rem;
+    width: 1rem;
+    background-color: green;
+    border-radius: 50%;
+    display: inline-block;
+}
 
 /*
 .content {
@@ -33,7 +49,7 @@ form, div, main{
 }
 */
 
-.content{
+.content {
     max-width: 710px;
     /*background-color: #f8f9fa;*/
     border-radius: 10px;
@@ -46,7 +62,7 @@ form, div, main{
 }
 
 @starting-style {
-  .showing {
-    opacity: 0;
-  }
+    .showing {
+        opacity: 0;
+    }
 }

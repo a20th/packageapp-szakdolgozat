@@ -44,14 +44,21 @@
       <NavItem>
         <NavLink href="/admin/status">{m.app_navbar_tracking()}</NavLink>
       </NavItem>
+      <Dropdown nav inNavbar>
+        <DropdownToggle nav caret>{m.order()}</DropdownToggle>
+        <DropdownMenu end>
+          <DropdownItem href="/admin/orders">{m.orders()}</DropdownItem>
+          <DropdownItem href="/admin/order">{m.search_orders()}}</DropdownItem>
+        </DropdownMenu>
+      </Dropdown>
       <NavItem>
-        <NavLink href="/admin/order">{m.app_navbar_order()}</NavLink>
+        <NavLink href="/admin/package">{m.package()}</NavLink>
       </NavItem>
       <NavItem>
-        <NavLink href="/admin/package">{m.app_navbar_pricing()}</NavLink>
+        <NavLink href="/admin/pricing">{m.app_navbar_pricing()}</NavLink>
       </NavItem>
       <NavItem>
-        <NavLink href="/admin/users">Users</NavLink>
+        <NavLink href="/admin/users">{m.users()}}</NavLink>
       </NavItem>
       {#if data.loggedIn}
         <NavItem>

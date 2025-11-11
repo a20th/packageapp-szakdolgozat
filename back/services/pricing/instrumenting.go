@@ -1,6 +1,7 @@
 package pricing
 
 import (
+	"back-go/services/models"
 	"fmt"
 	"time"
 
@@ -11,6 +12,26 @@ type InstrumentingMiddleware struct {
 	RequestCount   metrics.Counter
 	RequestLatency metrics.Histogram
 	Next           Service
+}
+
+func (mw InstrumentingMiddleware) SetPricing(pricing models.Pricing) (err error) {
+	defer func(begin time.Time) {
+		lvs := []string{"method", "SetPricing", "error", fmt.Sprint(err != nil)}
+		mw.RequestCount.With(lvs...).Add(1)
+		mw.RequestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mw.Next.SetPricing(pricing)
+}
+
+func (mw InstrumentingMiddleware) GetPricing() (pricing models.Pricing, err error) {
+	defer func(begin time.Time) {
+		lvs := []string{"method", "GetPricing", "error", fmt.Sprint(err != nil)}
+		mw.RequestCount.With(lvs...).Add(1)
+		mw.RequestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mw.Next.GetPricing()
 }
 
 func (mw InstrumentingMiddleware) CalculatePrice(from string, to string, size int) (price float64, err error) {

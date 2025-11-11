@@ -3,7 +3,6 @@ package repository
 import (
 	"back-go/services/models"
 	"context"
-
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -20,7 +19,7 @@ func (a AdminRepository) GetAll() ([]models.Admin, error) {
 
 func (a AdminRepository) Delete(id string) error {
 	ctx := context.Background()
-	_, err := gorm.G[models.Admin](a.Db).Where("username = ?", id).Delete(ctx)
+	err := gorm.G[models.Admin](a.Db).Exec(ctx, "DELETE FROM admins WHERE username = ?", id)
 	return err
 }
 

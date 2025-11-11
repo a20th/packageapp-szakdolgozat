@@ -4,6 +4,7 @@ import (
 	"back-go/services/account"
 	"back-go/services/admin"
 	"back-go/services/auth"
+	"back-go/services/config"
 	"back-go/services/email"
 	"back-go/services/models"
 	"back-go/services/order"
@@ -13,11 +14,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"flag"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/alexedwards/argon2id"
@@ -37,36 +40,36 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-type Config struct {
-	Dsn               string       `json:"dsn"`
-	Smtp              email.Config `json:"smtp"`
-	GeolocationAPIKey string       `json:"geolocation_api_key"`
-	JWTSecretKey      string       `json:"jwt_secret_key"`
-	EmailDev          bool         `json:"email_dev"`
-}
-
 func main() {
-	var config Config
+	logger := log.NewLogfmtLogger(os.Stdout)
+
+	var configuration config.Config
 	{
-		path, _ := filepath.Abs("./main/config.json")
+		var flagconfig string
+		flag.StringVar(&flagconfig, "c", "config.yaml", "configuration file location")
+		flag.Parse()
+		path, _ := filepath.Abs(flagconfig)
 		file, err := os.Open(path)
+		if errors.Is(err, os.ErrNotExist) {
+			_ = logger.Log("err", "configuration file does not exist: "+path)
+			return
+		}
 		if err != nil {
 			panic(err)
 			return
 		}
-		err = json.NewDecoder(file).Decode(&config)
+		configuration, err = config.ReadConfig(file)
 		if err != nil {
 			panic(err)
 			return
 		}
 	}
-
-	db, err := gorm.Open(postgres.Open(config.Dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(configuration.Dsn.String()), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database" + err.Error())
 	}
 
-	err = db.AutoMigrate(models.Order{}, models.Package{}, models.Status{}, models.Account{}, models.TokenRecord{}, models.Admin{})
+	err = db.AutoMigrate(models.Order{}, models.Package{}, models.Status{}, models.Account{}, models.TokenRecord{}, models.Admin{}, models.Pricing{})
 	if err != nil {
 		return
 	}
@@ -76,7 +79,15 @@ func main() {
 		Username: "admin",
 		Password: hash,
 	})
-	logger := log.NewLogfmtLogger(os.Stdout)
+
+	db.Clauses(clause.OnConflict{DoNothing: true}).Create(&models.Pricing{
+		Model: gorm.Model{
+			ID: 1,
+		},
+		KmPrice:   15,
+		BasePrice: 1000,
+	})
+
 	fieldKeys := []string{"method", "error"}
 	promNamespace := "package_app"
 	requestCount := func(subsystem string) *kitprometheus.Counter {
@@ -101,23 +112,26 @@ func main() {
 	orderRepository := repository.OrderRepository{Db: db}
 	packageRepository := repository.PackageRepository{Db: db}
 	adminRepository := repository.AdminRepository{Db: db}
+	pricingRepository := repository.PricingRepository{Db: db}
 
 	var emailService email.Service
 	{
-		if config.EmailDev {
+		if configuration.EmailDev {
 			emailService = email.CreateConsoleService(os.Stdout)
 		} else {
-			err = email.TestEmailConfig(config.Smtp)
+			err = email.TestEmailConfig(configuration.Smtp)
 			if err != nil {
 				_ = logger.Log("error", err)
+				panic("smtp test failed, check configuration")
+
 			}
-			emailService = email.CreateEmailService(config.Smtp)
+			emailService = email.CreateEmailService(configuration.Smtp)
 		}
 
 	}
 	var pricingService pricing.Service
 	{
-		pricingService = pricing.CreatePricingService(config.GeolocationAPIKey, rate.NewLimiter(rate.Every(time.Second*2), 1), pricing.Pricing{BasePrice: 1000, KmPrice: 15})
+		pricingService = pricing.CreatePricingService(configuration.GeolocationAPIKey, rate.NewLimiter(rate.Every(time.Second*2), 1), pricingRepository, configuration.PricingDev)
 		pricingService = pricing.LoggingMiddleware{Logger: logger, Next: pricingService}
 		pricingService = pricing.InstrumentingMiddleware{
 			RequestCount:   requestCount("pricing_service"),
@@ -139,7 +153,7 @@ func main() {
 
 	var authService auth.Service
 	{
-		authService = auth.CreateAuthService([]byte(config.JWTSecretKey), accountRepository, authRepository)
+		authService = auth.CreateAuthService([]byte(configuration.JWTSecretKey), accountRepository, authRepository)
 		authService = auth.LoggingMiddleware{Logger: logger, Next: authService}
 		authService = auth.InstrumentingMiddleware{
 			RequestCount:   requestCount("auth_service"),
@@ -172,10 +186,10 @@ func main() {
 
 	var adminService admin.Service
 	{
-		adminService = admin.CreateAdminService([]byte(config.JWTSecretKey), adminRepository, authRepository)
+		adminService = admin.CreateAdminService([]byte(configuration.JWTSecretKey), adminRepository, authRepository)
 	}
 
-	keyFunction := func(token *stdjwt.Token) (interface{}, error) { return []byte(config.JWTSecretKey), nil }
+	keyFunction := func(token *stdjwt.Token) (interface{}, error) { return []byte(configuration.JWTSecretKey), nil }
 	Auth := func(e endpoint.Endpoint) endpoint.Endpoint {
 		return JWTParser(keyFunction, stdjwt.SigningMethodHS256, authRepository, false)(e)
 	}
@@ -183,6 +197,31 @@ func main() {
 		return JWTParser(keyFunction, stdjwt.SigningMethodHS256, authRepository, true)(e)
 	}
 	/** Admin **/
+
+	adminGetAllOrdersHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeGetAllOrdersAdminEndpoint(orderService)),
+		httptransport.NopRequestDecoder,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	adminGetPricingHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeGetPricingAdminEndpoint(pricingService)),
+		httptransport.NopRequestDecoder,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
+	adminSetPricingHandler := httptransport.NewServer(
+		AdminAuth(admin.MakeSetPricingAdminEndpoint(pricingService)),
+		pricing.DecodePricingRequest,
+		EncodeResponse,
+		httptransport.ServerBefore(jwt.HTTPToContext()),
+		httptransport.ServerErrorEncoder(JSONErrorEncoder),
+	)
+
 	adminGetHandler := httptransport.NewServer(
 		AdminAuth(admin.MakeAdminGetEndpoint(adminService)),
 		httptransport.NopRequestDecoder,
@@ -368,7 +407,7 @@ func main() {
 	mux.Handle("POST /login", loginHandler)
 	mux.Handle("POST /register", registerHandler)
 	mux.Handle("POST /logout", logoutHandler)
-	mux.Handle("POST /refresh", refreshHandler)
+	mux.Handle("GET /refresh", refreshHandler)
 	mux.Handle("POST /price", calculatePriceHandler)
 	mux.Handle("POST /order/create", createOrderHandler)
 	mux.Handle("GET /metrics", promhttp.Handler())
@@ -386,15 +425,17 @@ func main() {
 	mux.Handle("PUT /admin/user", adminCreateHandler)
 
 	mux.Handle("GET /admin/order", adminGetOrderHandler)
+	mux.Handle("GET /admin/orders", adminGetAllOrdersHandler)
 	mux.Handle("DELETE /admin/order", adminDeleteOrderHandler)
 	mux.Handle("POST /admin/order", adminUpdateOrderHandler)
 	mux.Handle("GET /admin/package", adminGetPackageHandler)
 	mux.Handle("DELETE /admin/package", adminDeletePackageHandler)
 	mux.Handle("POST /admin/package", adminUpdatePackageHandler)
 	mux.Handle("POST /admin/status", adminAddStatusHandler)
+	mux.Handle("GET /admin/pricing", adminGetPricingHandler)
+	mux.Handle("POST /admin/pricing", adminSetPricingHandler)
 
 	//GET /admin/orders
-	//GET /admin/packages
 
 	opt := cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -410,8 +451,8 @@ func main() {
 		AllowCredentials: true,
 	}
 	handler := cors.New(opt).Handler(mux)
-	_ = logger.Log("msg", "HTTP", "addr", ":8080")
-	_ = logger.Log("err", http.ListenAndServe(":8080", handler))
+	_ = logger.Log("msg", "HTTP", "addr", ":"+strconv.Itoa(configuration.Port))
+	_ = logger.Log("err", http.ListenAndServe(":"+strconv.Itoa(configuration.Port), handler))
 }
 
 func JWTParser(keyFunc stdjwt.Keyfunc, method stdjwt.SigningMethod, jwtRepository repository.JWTRepository, admin bool) endpoint.Middleware {
@@ -477,7 +518,9 @@ func JSONErrorEncoder(_ context.Context, err error, w http.ResponseWriter) {
 		errors.Is(err, account.ErrInvalidVerificationCode) ||
 		errors.Is(err, account.ErrNotVerified) ||
 		errors.Is(err, account.ErrAccountNotExist) ||
-		errors.Is(err, account.ErrAlreadyVerified) {
+		errors.Is(err, account.ErrAlreadyVerified) ||
+		errors.Is(err, pricing.ErrInvalidValue) ||
+		errors.Is(err, jwt.ErrTokenContextMissing) {
 		status = http.StatusBadRequest
 	}
 	if errors.Is(err, auth.ErrInvalidCredentials) ||

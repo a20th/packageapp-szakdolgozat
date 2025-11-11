@@ -27,6 +27,14 @@ func DecodeCalculatePriceRequest(_ context.Context, r *http.Request) (interface{
 	return request, nil
 }
 
+func DecodePricingRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var request Pricing
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		return nil, err
+	}
+	return request, nil
+}
+
 type PriceRequest struct {
 	From string `json:"from"`
 	To   string `json:"to"`
@@ -35,4 +43,9 @@ type PriceRequest struct {
 
 type PriceResponse struct {
 	Price float64 `json:"price"`
+}
+
+type Pricing struct {
+	KmPrice   int `json:"kmprice"`
+	BasePrice int `json:"baseprice"`
 }

@@ -15,7 +15,8 @@ type Service interface {
 	GetOrder(id string) (*models.Order, error)
 	DeleteOrder(id string) error
 	UpdateOrder(order OrderDTO) error
-	GetAllOrders(email string) (*[]models.Order, error)
+	GetAllOrdersForUser(email string) (*[]models.Order, error)
+	GetAllOrders() (*[]models.Order, error)
 }
 
 var NoPackageError = errors.New("no package found")
@@ -23,6 +24,14 @@ var NoPackageError = errors.New("no package found")
 type service struct {
 	Repo    Repository
 	Pricing pricing.Service
+}
+
+func (s service) GetAllOrders() (*[]models.Order, error) {
+	account, err := s.Repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	return account, nil
 }
 
 func (s service) DeleteOrder(id string) error {
@@ -43,6 +52,7 @@ func (s service) UpdateOrder(order OrderDTO) (err error) {
 	o.Country = order.Country
 	o.Address = order.Address
 	o.TaxNumber = order.TaxNumber
+	o.Active = order.Active
 	o.ZIPCode = order.ZIPCode
 	o.Number = order.Number
 	err = s.Repo.Store(o)
@@ -52,7 +62,7 @@ func (s service) UpdateOrder(order OrderDTO) (err error) {
 	return nil
 }
 
-func (s service) GetAllOrders(email string) (*[]models.Order, error) {
+func (s service) GetAllOrdersForUser(email string) (*[]models.Order, error) {
 	account, err := s.Repo.FindFromAccount(email)
 	if err != nil {
 		return nil, err
@@ -88,6 +98,7 @@ func (s service) CreateOrder(order *models.Order) error {
 	if err != nil {
 		return err
 	}
+	order.Active = true
 	err = s.Repo.Store(order)
 	if err != nil {
 		return err
@@ -108,4 +119,5 @@ type Repository interface {
 	Find(id string) (*models.Order, error)
 	FindFromAccount(string) (*[]models.Order, error)
 	Delete(string) error
+	GetAll() (*[]models.Order, error)
 }

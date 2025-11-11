@@ -2,7 +2,6 @@ package email
 
 import (
 	"crypto/tls"
-
 	gomail "gopkg.in/gomail.v2"
 )
 
@@ -15,8 +14,8 @@ type service struct {
 }
 
 type Config struct {
-	SMTPHost string `json:"host"`
-	SMTPPort int    `json:"port"`
+	SMTPHost string `yaml:"host"`
+	SMTPPort int    `yaml:"port"`
 	Sender   string
 	Username string
 	Password string
@@ -55,6 +54,11 @@ func CreateEmailService(config Config) Service {
 func TestEmailConfig(config Config) (err error) {
 	dialer := dialFromConfig(config)
 	c, err := dialer.Dial()
-	c.Close()
+	if err != nil {
+		return err
+	}
+	defer func(c gomail.SendCloser) {
+		_ = c.Close()
+	}(c)
 	return
 }

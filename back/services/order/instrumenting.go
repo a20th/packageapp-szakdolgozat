@@ -14,6 +14,16 @@ type InstrumentingMiddleware struct {
 	Next           Service
 }
 
+func (mw InstrumentingMiddleware) GetAllOrders() (orders *[]models.Order, err error) {
+	defer func(begin time.Time) {
+		lvs := []string{"method", "GetAllOrders", "error", fmt.Sprint(err != nil)}
+		mw.RequestCount.With(lvs...).Add(1)
+		mw.RequestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
+	}(time.Now())
+
+	return mw.Next.GetAllOrders()
+}
+
 func (mw InstrumentingMiddleware) DeleteOrder(id string) (err error) {
 	defer func(begin time.Time) {
 		lvs := []string{"method", "DeleteOrder", "error", fmt.Sprint(err != nil)}
@@ -34,14 +44,14 @@ func (mw InstrumentingMiddleware) UpdateOrder(order OrderDTO) (err error) {
 	return mw.Next.UpdateOrder(order)
 }
 
-func (mw InstrumentingMiddleware) GetAllOrders(email string) (orders *[]models.Order, err error) {
+func (mw InstrumentingMiddleware) GetAllOrdersForUser(email string) (orders *[]models.Order, err error) {
 	defer func(begin time.Time) {
 		lvs := []string{"method", "CreateOrder", "error", fmt.Sprint(err != nil)}
 		mw.RequestCount.With(lvs...).Add(1)
 		mw.RequestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	return mw.Next.GetAllOrders(email)
+	return mw.Next.GetAllOrdersForUser(email)
 }
 
 func (mw InstrumentingMiddleware) CreateOrder(order *models.Order) (err error) {

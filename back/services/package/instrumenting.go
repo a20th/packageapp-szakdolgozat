@@ -22,7 +22,7 @@ func (mw InstrumentingMiddleware) GetPackage(id string) (p *models.Package, err 
 		mw.RequestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	p, err = mw.GetPackage(id)
+	p, err = mw.Next.GetPackage(id)
 	return
 }
 

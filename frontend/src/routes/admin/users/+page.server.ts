@@ -8,7 +8,6 @@ interface DTO {
 
 export const load = async (event) => {
     const url = apiLocation + "/admin/getall"
-    //return redirect(303, "/admin")
     const resp = await event.fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + event.cookies.get("access"), }

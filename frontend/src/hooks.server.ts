@@ -24,8 +24,8 @@ const adminHandle: Handle = async ({ event, resolve }) => {
 		})
 
 		if (response.status == 401) {
-			const response = await event.fetch(apiLocation + "/admin/refresh", {
-				method: "POST",
+			const response = await fetch(apiLocation + "/admin/refresh", {
+				method: "GET",
 				headers: {
 					"Content-Type": "application/json",
 					"Authorization": "Bearer " + event.cookies.get('refresh')
@@ -64,7 +64,7 @@ const adminHandle: Handle = async ({ event, resolve }) => {
 		event.cookies.delete("refresh", { path: "/admin" })
 	}
 
-	if (path("/admin/order") || path("/admin/package") || path("/admin/status")) {
+	if (path("/admin/")) {
 		if (!loggedIn) return redirect(303, "/admin")
 	}
 
@@ -97,7 +97,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 
 		if (!response.ok) {
 			const response = await event.fetch(apiLocation + "/refresh", {
-				method: "POST",
+				method: "GET",
 				headers: {
 					"Content-Type": "application/json",
 					"Authorization": "Bearer " + event.cookies.get('refresh')

@@ -56,6 +56,7 @@
                         disabled={submitInProgress}
                         name="Password"
                         type="password"
+                        required
                     />
                     <div slot="label">Password</div>
                 </FormGroup>
@@ -94,7 +95,7 @@
                                 type="submit"
                                 class=""
                                 color="danger"
-                                disabled={submitInProgress}>Delete</Button
+                                disabled={submitInProgress || user == "admin"}>Delete</Button
                             >
                         </div>
                     </div>

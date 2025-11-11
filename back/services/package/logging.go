@@ -23,7 +23,7 @@ func (mw LoggingMiddleware) GetPackage(id string) (p *models.Package, err error)
 		)
 	}(time.Now())
 
-	p, err = mw.GetPackage(id)
+	p, err = mw.Next.GetPackage(id)
 	return
 }
 

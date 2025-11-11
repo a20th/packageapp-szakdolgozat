@@ -12,6 +12,15 @@ type OrderRepository struct {
 	Db *gorm.DB
 }
 
+func (o OrderRepository) GetAll() (*[]models.Order, error) {
+	ctx := context.Background()
+	user, err := gorm.G[models.Order](o.Db).
+		Preload("Packages", nil).
+		Preload("Account", nil).
+		Order("active, created_at DESC").Find(ctx)
+	return &user, err
+}
+
 func (o OrderRepository) Delete(s string) error {
 	ctx := context.Background()
 	_, err := gorm.G[models.Order](o.Db).Where("order_id = ?", s).Delete(ctx)
@@ -27,12 +36,15 @@ func (o OrderRepository) Store(order *models.Order) error {
 
 func (o OrderRepository) Find(id string) (*models.Order, error) {
 	ctx := context.Background()
-	user, err := gorm.G[models.Order](o.Db).Where("id = ?", id).First(ctx)
+	user, err := gorm.G[models.Order](o.Db).Where("order_id = ?", id).First(ctx)
 	return &user, err
 }
 
 func (o OrderRepository) FindFromAccount(accountEmail string) (*[]models.Order, error) {
 	ctx := context.Background()
-	user, err := gorm.G[models.Order](o.Db).Where("account_email = ?", accountEmail).Preload("Packages", nil).Order("created_at DESC").Find(ctx)
+	user, err := gorm.G[models.Order](o.Db).
+		Where("account_email = ?", accountEmail).
+		Preload("Packages", nil).
+		Order("created_at DESC").Find(ctx)
 	return &user, err
 }

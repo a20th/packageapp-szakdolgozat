@@ -79,7 +79,7 @@ func DecodeCreateOrderRequest(_ context.Context, r *http.Request) (interface{}, 
 func MakeGetAllOrdersRequest(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		claims := ctx.Value(jwt.JWTClaimsContextKey).(*stdjwt.RegisteredClaims)
-		orders, err := s.GetAllOrders(claims.Subject)
+		orders, err := s.GetAllOrdersForUser(claims.Subject)
 		if err != nil {
 			return nil, err
 		}
@@ -117,6 +117,7 @@ type OrderDTO struct {
 	Country   string
 	Address   string
 	Number    string
+	Active    bool
 	Packages  []PackageDTO
 }
 
@@ -155,6 +156,7 @@ func ToOrderDTO(order models.Order) (dto OrderDTO) {
 	dto.Address = order.Address
 	dto.Number = order.Number
 	dto.Packages = make([]PackageDTO, len(order.Packages))
+	dto.Active = order.Active
 	for i, p := range order.Packages {
 		dto.Packages[i] = ToPackageDTO(p)
 	}

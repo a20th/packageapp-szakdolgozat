@@ -1,6 +1,7 @@
 package pricing
 
 import (
+	"back-go/services/models"
 	"context"
 	"encoding/json"
 	"errors"
@@ -18,56 +19,91 @@ import (
 var ErrInvalidLocation = errors.New("invalid location")
 var ErrInvalidFrom = errors.New("invalid from location")
 var ErrInvalidTo = errors.New("invalid to location")
+var ErrInvalidValue = errors.New("invalid value")
 
 type Service interface {
 	CalculatePrice(from string, to string, size int) (float64, error)
-}
-
-type Pricing struct {
-	BasePrice int `json:"base_price"`
-	KmPrice   int `json:"km_price"`
+	SetPricing(pricing models.Pricing) error
+	GetPricing() (models.Pricing, error)
 }
 
 type service struct {
-	apiKey  string
-	rate    *rate.Limiter
-	pricing Pricing
+	apiKey string
+	dev    bool
+	rate   *rate.Limiter
+	repo   Repository
+}
+
+type Repository interface {
+	Store(pricing models.Pricing) error
+	Get() (models.Pricing, error)
+}
+
+func (s *service) SetPricing(pricing models.Pricing) error {
+	if pricing.KmPrice < 0 || pricing.BasePrice < 0 {
+		return ErrInvalidValue
+	}
+	err := s.repo.Store(pricing)
+	return err
+}
+
+func (s *service) GetPricing() (models.Pricing, error) {
+	pricing, err := s.repo.Get()
+	if err != nil {
+		return models.Pricing{}, err
+	}
+	return pricing, nil
 }
 
 func (s *service) CalculatePrice(from string, to string, size int) (float64, error) {
+	var distance float64
+	{
+		if s.dev == false {
+			fromChan := make(chan geodist.Coord)
+			toChan := make(chan geodist.Coord)
+			fromError := make(chan error)
+			toError := make(chan error)
 
-	fromChan := make(chan geodist.Coord)
-	toChan := make(chan geodist.Coord)
-	fromError := make(chan error)
-	toError := make(chan error)
+			go s.asyncGetLocation(from, fromChan, fromError)
+			go s.asyncGetLocation(to, toChan, toError)
 
-	go s.asyncGetLocation(from, fromChan, fromError)
-	go s.asyncGetLocation(to, toChan, toError)
+			fromCoord, toCoord, fromErr, toErr := <-fromChan, <-toChan, <-fromError, <-toError
+			if errors.Is(fromErr, ErrInvalidLocation) {
+				return 0, ErrInvalidFrom
+			}
+			if fromErr != nil {
+				return 0, fromErr
+			}
+			if errors.Is(toErr, ErrInvalidLocation) {
+				return 0, ErrInvalidTo
+			}
+			if toErr != nil {
+				return 0, toErr
+			}
 
-	fromCoord, toCoord, fromErr, toErr := <-fromChan, <-toChan, <-fromError, <-toError
-	if errors.Is(fromErr, ErrInvalidLocation) {
-		return 0, ErrInvalidFrom
-	}
-	if fromErr != nil {
-		return 0, fromErr
-	}
-	if errors.Is(toErr, ErrInvalidLocation) {
-		return 0, ErrInvalidTo
-	}
-	if toErr != nil {
-		return 0, toErr
+			_, dist, err := geodist.VincentyDistance(fromCoord, toCoord)
+			if err != nil {
+				return 0, err
+			}
+			distance = dist
+		} else {
+			distance = 25
+		}
 	}
 
-	_, distance, err := geodist.VincentyDistance(fromCoord, toCoord)
+	pricing, err := s.GetPricing()
 	if err != nil {
 		return 0, err
 	}
-	base := float64(s.pricing.BasePrice)
-	kmPrice := float64(s.pricing.KmPrice)
+
+	base := float64(pricing.BasePrice)
+	kmPrice := float64(pricing.KmPrice)
 	sizeModifier := float64(1)
+	//Nagy csomag
 	if size > 80 {
 		sizeModifier = 1.2
 	}
+	//Közepes csomag
 	if size > 50 {
 		sizeModifier = 1.1
 	}
@@ -154,10 +190,11 @@ type GeoAPIResponse []struct {
 	Importance  float64  `json:"importance"`
 }
 
-func CreatePricingService(apiKey string, limit *rate.Limiter, pricing Pricing) Service {
+func CreatePricingService(apiKey string, limit *rate.Limiter, repo Repository, dev bool) Service {
 	return &service{
-		apiKey:  apiKey,
-		rate:    limit,
-		pricing: pricing,
+		apiKey: apiKey,
+		rate:   limit,
+		repo:   repo,
+		dev:    dev,
 	}
 }
