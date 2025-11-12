@@ -34,7 +34,7 @@
             <NavLink href="/app/tracking">{m.app_navbar_tracking()}</NavLink>
         </NavItem>
         <NavItem>
-            <NavLink href="/app/faq">{m.app_navbar_faq()}</NavLink>
+            <NavLink href="/app/faq">{m.support()}</NavLink>
         </NavItem>
 
       {#if data.loggedIn}

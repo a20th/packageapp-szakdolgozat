@@ -54,7 +54,6 @@ export const actions: Actions = {
         const password = formData.get("password")
 
         const body = JSON.stringify({ username: username?.toString(), password: password?.toString(), })
-        console.log(body)
         const url = apiLocation + "/admin/user"
         return await event.fetch(url, {
             method: "PUT",

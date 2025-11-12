@@ -79,5 +79,10 @@
 	"create": "Create",
 	"setpricing": "Set pricing",
 	"baseprice": "Base price",
-	"kmprice": "Km price"
+	"kmprice": "Km price",
+	"faqlong": "Frequently Asked Questions",
+	"support": "Support",
+	"supportlong": "Feel free to contact us on the following channels:",
+	"question": "Question",
+	"answer": "Answer"
 }

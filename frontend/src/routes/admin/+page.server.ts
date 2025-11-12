@@ -60,7 +60,6 @@ export const actions = {
         return { success: true }
     },
     logout: async (event) => {
-        console.log("huh")
         const url = apiLocation + "/admin/logout"
         event.fetch(url, {
             method: "POST",

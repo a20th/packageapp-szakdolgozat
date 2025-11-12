@@ -52,7 +52,6 @@ export const load = async (event) => {
     }).then(async (res) => {
         if (res.ok) {
             const resp = await res.json() as OrderDTO[]
-            console.log(resp[0].AccountEmail + "asd")
             return { orders: resp }
         }
     }).catch((e) => {

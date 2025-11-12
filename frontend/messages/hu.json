@@ -68,5 +68,10 @@
 	"create": "Létrehozás",
 	"setpricing": "Árazás beállítása",
 	"baseprice": "Alapár",
-	"kmprice": "Kilométerenkénti ár"
+	"kmprice": "Kilométerenkénti ár",
+	"faqlong": "Gyakori kérdések",
+	"support": "Támogatás",
+	"supportlong": "Az alábbi csatornákon tudja feltenni nekünk a kérdéseit:",
+	"question": "Kérdés",
+	"answer": "Válasz"
 }

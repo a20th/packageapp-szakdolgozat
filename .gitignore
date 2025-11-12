@@ -49,3 +49,5 @@ back/main/config.json
 /frontend/node_modules
 /frontend/.svelte-kit
 back/config.yaml
+/frontend/build
+frontend/package-lock.json
