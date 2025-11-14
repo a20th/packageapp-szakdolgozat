@@ -92,6 +92,7 @@ func (s service) Register(email string, password string, name string, phoneNumbe
 			"<p>To activate your account click on the link above:</p>"
 		message.SetHeader("Subject", "Regisztráció megerősítése / Verify registration")
 
+		//TODO
 		link := "http://localhost:5173/app?verify=" + verificationCode + "&email=" + url.QueryEscape(email)
 
 		site = strings.Replace(site, "%name", acc.Name, -1)

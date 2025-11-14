@@ -84,5 +84,6 @@
 	"support": "Support",
 	"supportlong": "Feel free to contact us on the following channels:",
 	"question": "Question",
-	"answer": "Answer"
+	"answer": "Answer",
+	"passwordreqs": "The password must contain at least a letter, a number, and must be 8-32 characters long"
 }

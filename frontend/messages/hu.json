@@ -73,5 +73,15 @@
 	"support": "Támogatás",
 	"supportlong": "Az alábbi csatornákon tudja feltenni nekünk a kérdéseit:",
 	"question": "Kérdés",
-	"answer": "Válasz"
+	"answer": "Válasz",
+	"form_login_error_no_email": "Az e-mail megadása kötelező",
+	"form_login_error_no_password": "A jelszó megadása kötelező",
+	"form_login_error_invalid_email": "Érvénytelen e-mail címet adott meg",
+	"form_login_password": "Jelszó",
+	"form_register_phone_number": "Telefonszám",
+	"form_register_password_again": "Jelszó ismét",
+	"form_register_full_name": "Teljes név",
+	"form_register_error_invalid_phone": "Érvénytelen telefonszámot adott meg",
+	"form_register_submit": "Regisztráció",
+	"passwordreqs": "Jelszónak tartalmaznia kell legalább egy betűt, egy számot és 8-32 karakter között kell lennie"
 }

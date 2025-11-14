@@ -89,7 +89,7 @@
                         required
                     />
                 </FormGroup>
-                <FormGroup floating label="Password">
+                <FormGroup floating label={m.form_login_password()}>
                     <Input
                         autocomplete="current-password"
                         disabled={submitInProgress}
@@ -119,7 +119,7 @@
                 }}
             >
                 <span
-                    ><span class="text-danger">*</span> - Required fields to fill</span
+                    ><span class="text-danger">*</span> - {m.required_fields()}</span
                 >
                 <FormGroup floating>
                     <Input
