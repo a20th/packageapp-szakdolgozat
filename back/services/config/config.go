@@ -3,8 +3,9 @@ package config
 import (
 	"back-go/services/email"
 	"errors"
-	"gopkg.in/yaml.v3"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Dsn struct {
@@ -13,6 +14,11 @@ type Dsn struct {
 	Password string `yaml:"password"`
 	Port     string `yaml:"port"`
 	Dbname   string `yaml:"dbname"`
+}
+
+type Frontend struct {
+	Host string `yaml:"host"`
+	Port string `yaml:"port"`
 }
 
 func (d Dsn) String() string {
@@ -25,6 +31,7 @@ type Config struct {
 	Smtp              email.Config `yaml:"smtp"`
 	GeolocationAPIKey string       `yaml:"geolocation_api_key"`
 	JWTSecretKey      string       `yaml:"jwt_secret_key"`
+	Frontend          Frontend     `yaml:"frontend"`
 	EmailDev          bool         `yaml:"email_dev"`
 	PricingDev        bool         `yaml:"pricing_dev"`
 }
@@ -36,6 +43,11 @@ func ReadConfig(file *os.File) (configuration Config, err error) {
 	}
 	if configuration.Port == 0 {
 		err = errors.New("configuration port is missing")
+		return
+	}
+
+	if configuration.Frontend.Host == "" || configuration.Frontend.Port == "" {
+		err = errors.New("frontend configuration has missing values")
 		return
 	}
 

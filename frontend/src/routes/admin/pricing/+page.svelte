@@ -49,7 +49,7 @@
                         name="baseprice"
                         required
                     ></Input>
-                    <div slot="label">{m.baseprice()}</div>
+                    <div slot="label">{m.baseprice()} (HUF)</div>
                 </FormGroup>
             </div>
             <div class="col">
@@ -61,7 +61,7 @@
                         bind:value={data.pricing.kmprice}
                         required
                     />
-                    <div slot="label">{m.kmprice()}</div>
+                    <div slot="label">{m.kmprice()} (HUF)</div>
                 </FormGroup>
             </div>
         </div>

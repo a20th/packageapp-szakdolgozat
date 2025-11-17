@@ -579,6 +579,7 @@
                             type="button"
                             on:click={() => {if(form?.prices) {form = null}}}
                             style="float: right;"
+                            disabled={submitInProgress}
                             >{m.back()} <i class="bi bi-arrow-left"></i></Button
                         >
                     </div>
@@ -586,6 +587,7 @@
                 {#if form?.prices}
                     <Table>
                         {#each form.prices as price, i}
+                        {console.table(form.prices)}
                             <tr><td>{m.package()} {i + 1}</td><td>{price} HUF</td></tr>
                         {/each}
                         <tr

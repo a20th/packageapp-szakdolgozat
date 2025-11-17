@@ -73,11 +73,10 @@ func (s service) Register(email string, password string, name string, phoneNumbe
 	}
 
 	acc := &models.Account{
-		Password:          hash,
-		Email:             email,
-		Name:              name,
-		PhoneNumber:       phoneNumber,
-		PreferredLanguage: preferredLang,
+		Password:    hash,
+		Email:       email,
+		Name:        name,
+		PhoneNumber: phoneNumber,
 	}
 
 	verificationCode := uuid.New().String()
@@ -88,12 +87,14 @@ func (s service) Register(email string, password string, name string, phoneNumbe
 		message = *gomail.NewMessage()
 		message.SetHeader("To", email)
 
-		site := "<h2>Kedves %name</h2><p>A felhasználó fiókod aktiválásához kattints az alábbi linkre:</p><a href=\"%link\">%link</a>" +
-			"<p>To activate your account click on the link above:</p>"
+		site := "<h2>Kedves %name</h2><p>A felhasználó fiókod aktiválásához kattints az alábbi linkre:</p><a href=\"%link\">Aktiválás</a>" +
+			"<p>To activate your account click on the link above:</p>" +
+			"<p>Ha nem működik a link, másold be az aktiváló oldal címét a böngészőbe:</p>" +
+			"<span>%link</span>" +
+			"<p>If the link doesn't work, paste the web address above into your browser:</p>"
 		message.SetHeader("Subject", "Regisztráció megerősítése / Verify registration")
 
-		//TODO
-		link := "http://localhost:5173/app?verify=" + verificationCode + "&email=" + url.QueryEscape(email)
+		link := "http://" + s.FrontendLocation + "/app?verify=" + verificationCode + "&email=" + url.QueryEscape(email)
 
 		site = strings.Replace(site, "%name", acc.Name, -1)
 		site = strings.Replace(site, "%link", link, -1)
@@ -167,10 +168,11 @@ func (s service) Delete(id string) error {
 	return s.Repo.Delete(id)
 }
 
-func CreateAccountService(repo Repository, emailService email.Service) Service {
+func CreateAccountService(repo Repository, emailService email.Service, frontend string) Service {
 	return &service{
-		Repo:         repo,
-		EmailService: emailService,
+		Repo:             repo,
+		EmailService:     emailService,
+		FrontendLocation: frontend,
 	}
 }
 

@@ -264,7 +264,7 @@
             <Button type="submit" disabled={submitInProgress} class="w-100">{m.calculate_prices()}</Button>
         </form>
         {#if form?.success}
-            <p>{m.price_of_delivery()}: {form.success} HUF</p>
+            <h2 class="text-center mt-2">{m.price_of_delivery()}: {form.success} HUF</h2>
         {/if}
     </div>
 </main>

@@ -158,7 +158,7 @@
                         <span class="text-danger">*</span>
                     </div>
                 </FormGroup>
-                <FormGroup floating>
+                <div class="mb-1 form-floating">
                     <Input
                         disabled={submitInProgress}
                         autocomplete="new-password"
@@ -168,12 +168,12 @@
                         id="password"
                         required
                     />
-                    <div slot="label">
+                    <label for="password">
                         {m.form_login_password()}
                         <span class="text-danger">*</span>
-                    </div>
-                </FormGroup>
-                <span class="text-wrap m-0">Jelszónak tartalmaznia kell legalább egy betűt, egy számot és 8-32 karakter között kell lennie</span>         
+                    </label>
+                </div>
+                <span class="text-wrap m-0" style="font-size: 0.8rem">{m.passwordreqs()}</span>         
                 <FormGroup floating>
                     <Input
                         disabled={submitInProgress}

@@ -98,8 +98,8 @@ func main() {
 			Help:      "Number of requests received.",
 		}, fieldKeys)
 	}
-	requestLatency := func(subsystem string) *kitprometheus.Summary {
-		return kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+	requestLatency := func(subsystem string) *kitprometheus.Histogram {
+		return kitprometheus.NewHistogramFrom(stdprometheus.HistogramOpts{
 			Namespace: promNamespace,
 			Subsystem: subsystem,
 			Name:      "request_latency_microseconds",
@@ -142,7 +142,7 @@ func main() {
 
 	var accountService account.Service
 	{
-		accountService = account.CreateAccountService(accountRepository, emailService)
+		accountService = account.CreateAccountService(accountRepository, emailService, configuration.Frontend.Host+":"+configuration.Frontend.Port)
 		accountService = account.LoggingMiddleware{Logger: logger, Next: accountService}
 		accountService = account.InstrumentingMiddleware{
 			RequestCount:   requestCount("account_service"),

@@ -26,6 +26,8 @@
 
             case "shipped":
                 return m.status_shipped()
+            case "other":
+                return m.other()
 
             default:
                 return value;

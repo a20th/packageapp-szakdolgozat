@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="favicon.png" />
+	<link rel="manifest" href="manifest.json">
+    <title>Offline</title>
+</head>
+
+<body>
+
+    <div style="margin-top: 49vh;">
+        <h1 id="offline" style="text-align: center;"></h1>
+    <script>
+        document.getElementById("offline").innerText = "A szerver jelenleg nem elérhető. Kérjük ellenőrizze az internetkapcsolatát." 
+        if (document.cookie.split(";").some((item) => item.includes("PARAGLIDE_LOCALE=en"))) {
+            document.getElementById("offline").innerText = "Server can't reached. Please check your internet connection."
+        }
+        
+    </script>
+</body>
+
+</html>

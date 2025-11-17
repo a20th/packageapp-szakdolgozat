@@ -29,6 +29,9 @@
             case "shipped":
                 return m.status_shipped()
 
+            case "other":
+                return m.other()
+
             default:
                 return value;
         }
@@ -110,6 +113,7 @@
                         <option value="shipping">{translateStatus("shipping")}</option>
                         <option value="shipping-fail">{translateStatus("shipping-fail")}</option>
                         <option value="shipped">{translateStatus("shipped")}</option>
+                        <option value="other">{translateStatus("other")}</option>
                     </Input>
                     <div slot="label">
                             {m.status()} <span class="text-danger">*</span>

@@ -65,6 +65,9 @@ func (s service) GetUsers() (st []string, err error) {
 }
 
 func (s service) Delete(username string) error {
+	if username == "admin" {
+		return nil
+	}
 	err := s.Repo.Delete(username)
 	if err != nil {
 		return err

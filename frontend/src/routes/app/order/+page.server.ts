@@ -190,9 +190,8 @@ export const actions: Actions = {
         if (isActionFailure(order)) {
             return order
         }
-
         let prices = new Array<number>((order as Order).Packages.length)
-        for (let index = 0; index < (order as Order).Packages.length; index++) {
+        for (let index = 0; index < prices.length; index++) {
             const element = (order as Order).Packages[index]
             const parsedHeight = element.Height
             const parsedWidth = element.Width
@@ -211,8 +210,9 @@ export const actions: Actions = {
                         "Content-Type": "application/json",
                     },
                 })
-                const data = await response.json()
-
+                const t = await response.text()
+                //const data = await response.json()
+                const data = JSON.parse(t)
                 if (!response.ok) {
                     if (data.error) {
                         return fail(response.status, { error: data.error })
@@ -224,14 +224,15 @@ export const actions: Actions = {
                     console.log("Internal error, invalid price response" + data)
                     return fail(response.status, { error: "Internal Error" })
                 }
-
                 prices[index] = data.price
             }
             catch (e) {
+                console.log("err")
                 return fail(500, { error: "Internal error: " + e })
             }
-            return {prices: prices}
+            
         }
+        return {prices: prices}
     },
     confirm: async (event) => {
         const formData = await event.request.formData();
