@@ -27,8 +27,6 @@ self.addEventListener('activate', (event) => {
 			if (key !== CACHE) await caches.delete(key);
 		}
 	})());
-
-	// Tell the active service worker to take control of the page immediately.
 	self.clients.claim();
 });
 

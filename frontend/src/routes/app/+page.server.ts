@@ -95,11 +95,7 @@ export const actions = {
         const password_confirm = formData.get('password-confirm')
         const phone = formData.get('phone')
         const name = formData.get('fullname')
-        const lang = formData.get('lang')
 
-        if(lang === null){
-            return fail(400, { error: m.form_login_error_no_email() })
-        }
         if (email === null) {
             return fail(400, { error: m.form_login_error_no_email() })
         }
@@ -107,7 +103,7 @@ export const actions = {
             return fail(400, { error: m.form_login_error_no_password() })
         }
         if (name === null) {
-            return fail(400, { error: m.form_login_error_no_password() })
+            return fail(400, { error: "missing name" })
         }
         if (phone === null) {
             return fail(400, { error: m.form_login_error_no_password() })
@@ -121,12 +117,7 @@ export const actions = {
         if (!validator.isEmail(email.toString())) {
             return fail(400, { error: m.form_login_error_invalid_email() })
         }
-
-        if(lang != "hu" && lang != "en"){
-            return fail(400)
-        }
-
-        const body = JSON.stringify({ "email": email, "password": password, "name": name, "phone_number": phone, "lang" : lang})
+        const body = JSON.stringify({ "email": email, "password": password, "name": name, "phone_number": phone})
 
         try {
             const response = await event.fetch(apiLocation + "/register", {
