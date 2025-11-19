@@ -69,7 +69,7 @@
                 };
             }}
         >
-            <div class={form?.prices ? "d-none" : ""}>
+            <div class={form?.prices ? "d-none" : ""}> 
                 <span
                     ><span class="text-danger">*</span> - {m.required_fields()}</span
                 >
@@ -422,6 +422,7 @@
                                     disabled={submitInProgress}
                                     type="select"
                                     name="country-{i}"
+                                    bind:value={item.ToCountry}
                                     required
                                 >
                                     {#each data.countries.sort(countrySort) as country}
@@ -446,6 +447,7 @@
                                 <Input
                                     disabled={submitInProgress}
                                     name="zip-{i}"
+                                    bind:value={item.ToZIP}
                                     required
                                 />
                                 <div slot="label">
@@ -458,6 +460,7 @@
                                 <Input
                                     disabled={submitInProgress}
                                     name="city-{i}"
+                                    bind:value={item.ToCity}
                                     required
                                 />
                                 <div slot="label">
@@ -472,6 +475,7 @@
                                 <Input
                                     disabled={submitInProgress}
                                     name="address-{i}"
+                                    bind:value={item.ToAddress}
                                     required
                                 />
                                 <div slot="label">
@@ -486,6 +490,7 @@
                                 <Input
                                     disabled={submitInProgress}
                                     name="address-number-{i}"
+                                    bind:value={item.ToNumber}
                                     required
                                 />
                                 <div slot="label">
@@ -500,6 +505,7 @@
                                 <Input
                                     disabled={submitInProgress}
                                     name="other-{i}"
+                                    bind:value={item.ToOther}
                                 />
                                 <div slot="label">{m.other()}</div>
                             </FormGroup>
@@ -512,6 +518,7 @@
                                     disabled={submitInProgress}
                                     name="name-{i}"
                                     required
+                                    bind:value={item.ToName}
                                 />
                                 <div slot="label">
                                     {m.full_name()} <span class="text-danger">*</span>
@@ -526,6 +533,7 @@
                                     disabled={submitInProgress}
                                     name="phone-{i}"
                                     required
+                                    bind:value={item.ToPhone}
                                 />
                                 <div slot="label">
                                     {m.phone_number()} <span class="text-danger"
@@ -540,6 +548,7 @@
                                     disabled={submitInProgress}
                                     name="email-{i}"
                                     type="email"
+                                    bind:value={item.ToEmail}
                                 />
                                 <div slot="label">Email</div>
                             </FormGroup>
