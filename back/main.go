@@ -114,6 +114,8 @@ func main() {
 	adminRepository := repository.AdminRepository{Db: db}
 	pricingRepository := repository.PricingRepository{Db: db}
 
+	frontendLocation := configuration.Frontend.Host + ":" + strconv.Itoa(configuration.Frontend.Port)
+
 	var emailService email.Service
 	{
 		if configuration.EmailDev {
@@ -142,7 +144,7 @@ func main() {
 
 	var accountService account.Service
 	{
-		accountService = account.CreateAccountService(accountRepository, emailService, configuration.Frontend.Host+":"+configuration.Frontend.Port)
+		accountService = account.CreateAccountService(accountRepository, emailService, frontendLocation)
 		accountService = account.LoggingMiddleware{Logger: logger, Next: accountService}
 		accountService = account.InstrumentingMiddleware{
 			RequestCount:   requestCount("account_service"),
@@ -438,7 +440,7 @@ func main() {
 	//GET /admin/orders
 
 	opt := cors.Options{
-		AllowedOrigins: []string{"*"},
+		AllowedOrigins: []string{configuration.Frontend.Host + ":" + strconv.Itoa(configuration.Frontend.Port)},
 		AllowedMethods: []string{
 			http.MethodHead,
 			http.MethodGet,

@@ -26,7 +26,7 @@ var ErrInvalidEmail = errors.New("invalid email")
 var ErrDuplicateEmail = errors.New("duplicate email")
 
 type Service interface {
-	Register(email string, password string, name string, phoneNumber string, preferredLang string) error
+	Register(email string, password string, name string, phoneNumber string) error
 	Get(email string) (*models.Account, error)
 	Verify(email string, code string) error
 	Update(account models.Account) error
@@ -39,11 +39,8 @@ type service struct {
 	FrontendLocation string
 }
 
-func (s service) Register(email string, password string, name string, phoneNumber string, preferredLang string) error {
+func (s service) Register(email string, password string, name string, phoneNumber string) error {
 
-	if preferredLang != "hu" && preferredLang != "en" {
-		return ErrInvalidPhoneNumber
-	}
 	_, err := mail.ParseAddress(email)
 	if err != nil {
 		return ErrInvalidEmail

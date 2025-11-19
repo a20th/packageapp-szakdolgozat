@@ -13,7 +13,7 @@ import (
 func MakeRegisterEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(RegisterRequest)
-		err := s.Register(req.Email, req.Password, req.Name, req.PhoneNumber, req.Lang)
+		err := s.Register(req.Email, req.Password, req.Name, req.PhoneNumber)
 		return nil, err
 	}
 }
@@ -115,7 +115,6 @@ type RegisterRequest struct {
 	Password    string `json:"password"`
 	Name        string `json:"name"`
 	PhoneNumber string `json:"phone_number"`
-	Lang        string `json:"lang"`
 }
 
 type UpdateRequest struct {

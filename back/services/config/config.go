@@ -18,7 +18,7 @@ type Dsn struct {
 
 type Frontend struct {
 	Host string `yaml:"host"`
-	Port string `yaml:"port"`
+	Port int    `yaml:"port"`
 }
 
 func (d Dsn) String() string {
@@ -46,7 +46,7 @@ func ReadConfig(file *os.File) (configuration Config, err error) {
 		return
 	}
 
-	if configuration.Frontend.Host == "" || configuration.Frontend.Port == "" {
+	if configuration.Frontend.Host == "" || configuration.Frontend.Port == 0 {
 		err = errors.New("frontend configuration has missing values")
 		return
 	}

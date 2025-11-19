@@ -19,4 +19,4 @@ frontend: # A frontend hálózati helyének konfigurációja, a megadott érték
 geolocation_api_key: apikey # https://geocode.maps.co/ oldalról lehet kulcsot igényelni
 jwt_secret_key: 02dd313e36caf1151b0e3ff9319bd4799e73e1f561c7c364676b033b424d7118 # Tetszőleges 64 karakter hosszú, hex kódolt 256-bites AES kulcs
 email_dev: false # Ha igaz, akkor nem szükséges smtp beállításokat megadni
-pricing_dev: false # Ha igaz, akkor nem geolocation_api_keyt megadni
+pricing_dev: false # Ha igaz, akkor kell nem geolocation_api_keyt megadni

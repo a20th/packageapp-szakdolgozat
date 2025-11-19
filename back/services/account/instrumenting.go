@@ -25,14 +25,14 @@ func (mw InstrumentingMiddleware) Verify(email string, code string) (err error) 
 	return err
 }
 
-func (mw InstrumentingMiddleware) Register(email string, password string, name string, phoneNumber string, preferredLang string) (err error) {
+func (mw InstrumentingMiddleware) Register(email string, password string, name string, phoneNumber string) (err error) {
 	defer func(begin time.Time) {
 		lvs := []string{"method", "Register", "error", fmt.Sprint(err != nil)}
 		mw.RequestCount.With(lvs...).Add(1)
 		mw.RequestLatency.With(lvs...).Observe(time.Since(begin).Seconds())
 	}(time.Now())
 
-	err = mw.Next.Register(email, password, name, phoneNumber, preferredLang)
+	err = mw.Next.Register(email, password, name, phoneNumber)
 	return err
 }
 

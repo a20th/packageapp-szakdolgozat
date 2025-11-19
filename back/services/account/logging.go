@@ -12,7 +12,7 @@ type LoggingMiddleware struct {
 	Next   Service
 }
 
-func (mw LoggingMiddleware) Register(email string, password string, name string, phoneNumber string, preferredLang string) (err error) {
+func (mw LoggingMiddleware) Register(email string, password string, name string, phoneNumber string) (err error) {
 	defer func(begin time.Time) {
 		_ = mw.Logger.Log(
 			"method", "register",
@@ -22,7 +22,7 @@ func (mw LoggingMiddleware) Register(email string, password string, name string,
 		)
 	}(time.Now())
 
-	err = mw.Next.Register(email, password, name, phoneNumber, preferredLang)
+	err = mw.Next.Register(email, password, name, phoneNumber)
 	return
 }
 
