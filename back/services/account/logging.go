@@ -30,7 +30,6 @@ func (mw LoggingMiddleware) Verify(email string, code string) (err error) {
 	defer func(begin time.Time) {
 		_ = mw.Logger.Log(
 			"method", "verify",
-			"input", email,
 			"err", err,
 			"took", time.Since(begin),
 		)

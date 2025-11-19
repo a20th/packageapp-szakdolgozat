@@ -384,12 +384,14 @@ func main() {
 		EncodeResponse,
 		httptransport.ServerErrorEncoder(JSONErrorEncoder),
 	)
+
 	verifyHandler := httptransport.NewServer(
 		account.MakeVerifyEndpoint(accountService),
 		account.DecodeVerifyRequest,
 		EncodeResponse,
 		httptransport.ServerErrorEncoder(JSONErrorEncoder),
 	)
+
 	logoutHandler := httptransport.NewServer(
 		Auth(auth.MakeLogoutEndpoint(authService)),
 		httptransport.NopRequestDecoder,
@@ -487,15 +489,17 @@ func JWTParser(keyFunc stdjwt.Keyfunc, method stdjwt.SigningMethod, jwtRepositor
 				}
 				return nil, err
 			}
+
 			id := token.Claims.(*stdjwt.RegisteredClaims).ID
 			_, err = jwtRepository.Find(id)
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, jwt.ErrTokenExpired
+			}
+
 			if err != nil {
 				return nil, err
 			}
 
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, jwt.ErrTokenExpired
-			}
 			if (admin && !slices.Contains(token.Claims.(*stdjwt.RegisteredClaims).Audience, "admin")) || !admin && !slices.Contains(token.Claims.(*stdjwt.RegisteredClaims).Audience, "user") {
 				return nil, stdjwt.ErrTokenInvalidAudience
 			}

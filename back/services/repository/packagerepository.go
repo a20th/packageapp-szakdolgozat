@@ -27,6 +27,8 @@ func (p PackageRepository) Store(m *models.Package) error {
 
 func (p PackageRepository) Find(id string) (*models.Package, error) {
 	ctx := context.Background()
-	user, err := gorm.G[models.Package](p.Db).Where("package_id = ?", id).Preload("Statuses", nil).First(ctx)
-	return &user, err
+	pack, err := gorm.G[models.Package](p.Db).
+		Where("package_id = ?", id).
+		Preload("Statuses", nil).First(ctx)
+	return &pack, err
 }
